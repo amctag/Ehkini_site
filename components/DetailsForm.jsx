@@ -1,38 +1,29 @@
 import Link from "next/link";
-
-const interests = [
-  "Travel",
-  "Music",
-  "Movies",
-  "Fitness",
-  "Cooking",
-  "Reading",
-  "Art",
-  "Gaming",
-  "Coffee",
-  "Outdoors"
-];
+import { useTranslations } from "next-intl";
 
 export default function DetailsForm() {
+  const t = useTranslations("detailsForm");
+  const interests = t.raw("interestItems");
+
   return (
     <form className="auth-card auth-card-large">
       <div className="card-heading">
-        <h2>Details</h2>
-        <p>These fields are optional</p>
+        <h2>{t("title")}</h2>
+        <p>{t("subtitle")}</p>
       </div>
 
       <label className="field">
-        <span>Occupation <em>Optional</em></span>
-        <input type="text" name="occupation" placeholder="What do you do?" autoComplete="organization-title" />
+        <span>{t("occupation")} <em>{t("optional")}</em></span>
+        <input type="text" name="occupation" placeholder={t("occupationPlaceholder")} autoComplete="organization-title" />
       </label>
 
       <label className="field">
-        <span>Education <em>Optional</em></span>
-        <input type="text" name="education" placeholder="School, degree, or field" />
+        <span>{t("education")} <em>{t("optional")}</em></span>
+        <input type="text" name="education" placeholder={t("educationPlaceholder")} />
       </label>
 
       <fieldset className="interest-field">
-        <legend>Interests <em>Optional</em></legend>
+        <legend>{t("interests")} <em>{t("optional")}</em></legend>
         <div className="interest-grid">
           {interests.map((interest) => (
             <label className="interest-chip" key={interest}>
@@ -45,10 +36,10 @@ export default function DetailsForm() {
 
       <div className="button-row">
         <Link className="secondary-button" href="/signup/profile">
-          Back
+          {t("back")}
         </Link>
         <Link className="primary-button" href="/">
-          Continue
+          {t("continue")}
         </Link>
       </div>
     </form>

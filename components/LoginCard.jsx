@@ -1,41 +1,44 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function LoginCard() {
+  const t = useTranslations("loginCard");
+
   return (
     <form className="auth-card" action="/discover">
       <div className="card-heading">
-        <h2>Welcome Back</h2>
-        <p>Log in to your account</p>
+        <h2>{t("title")}</h2>
+        <p>{t("subtitle")}</p>
       </div>
 
       <label className="field">
-        <span>Email or Phone</span>
+        <span>{t("identifierLabel")}</span>
         <input
           type="text"
           name="identifier"
-          placeholder="Enter your email or phone"
+          placeholder={t("identifierPlaceholder")}
           autoComplete="username"
         />
       </label>
 
       <label className="field">
-        <span>Password</span>
+        <span>{t("passwordLabel")}</span>
         <input
           type="password"
           name="password"
-          placeholder="Enter your password"
+          placeholder={t("passwordPlaceholder")}
           autoComplete="current-password"
         />
       </label>
 
       <Link className="reset-link" href="/forgot-password">
-        Forgot Password?
+        {t("forgotPassword")}
       </Link>
 
-      <button type="submit">Login</button>
+      <button type="submit">{t("loginButton")}</button>
 
       <p className="signup-copy">
-        Don&apos;t have an account? <Link href="/signup">Sign Up</Link>
+        {t("noAccount")} <Link href="/signup">{t("signupLink")}</Link>
       </p>
     </form>
   );

@@ -17,77 +17,9 @@ import {
   User,
   X
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "./DashboardShell";
-
-const privacyItems = [
-  {
-    title: "Profile Visibility",
-    description: "Show profile to others",
-    icon: Eye
-  },
-  {
-    title: "Online Status",
-    description: "Show when you're active",
-    icon: Globe
-  },
-  {
-    title: "Read Receipts",
-    description: "Let others know you've read their messages",
-    icon: Mail
-  }
-];
-
-const notificationItems = [
-  {
-    title: "Push Notifications",
-    description: "Receive push notifications"
-  },
-  {
-    title: "Email Notifications",
-    description: "Receive email updates"
-  },
-  {
-    title: "New Messages",
-    description: "Notify on new messages"
-  },
-  {
-    title: "Gifts Received",
-    description: "Notify when you receive gifts"
-  }
-];
-
-const accountItems = [
-  {
-    key: "email",
-    title: "Email Address",
-    description: "user@example.com",
-    icon: Mail,
-    tone: "blue"
-  },
-  {
-    key: "phone",
-    title: "Phone Number",
-    description: "+1 (555) 123-4567",
-    icon: Phone,
-    tone: "green"
-  },
-  {
-    key: "password",
-    title: "Change Password",
-    description: "Update your password",
-    icon: Lock,
-    tone: "purple"
-  }
-];
-
-const supportItems = [
-  { title: "Help Center", icon: HelpCircle },
-  { title: "Terms of Service", icon: FileText },
-  { title: "Privacy Policy", icon: Shield },
-  { title: "About Taaruf", icon: User },
-  { title: "Language", subtitle: "English", icon: Languages }
-];
 
 function Toggle() {
   return (
@@ -109,78 +41,30 @@ function SectionHeader({ icon: Icon, title, tone }) {
   );
 }
 
+function resolveSettingsIcon(key) {
+  const icons = {
+    eye: Eye,
+    globe: Globe,
+    mail: Mail,
+    phone: Phone,
+    lock: Lock,
+    help: HelpCircle,
+    terms: FileText,
+    privacy: Shield,
+    about: User,
+    language: Languages
+  };
+
+  return icons[key] ?? HelpCircle;
+}
+
 function AccountModal({ type, onClose }) {
+  const t = useTranslations("settings.modal");
+
   const config = useMemo(() => {
-    if (type === "email") {
-      return {
-        title: "Change Email Address",
-        subtitle: "We'll send a verification link to your new email",
-        actionLabel: "Send Verification",
-        fields: [
-          {
-            label: "Current Email",
-            type: "email",
-            defaultValue: "user@example.com",
-            readOnly: true
-          },
-          {
-            label: "New Email",
-            type: "email",
-            placeholder: "Enter new email address"
-          },
-          {
-            label: "Password",
-            type: "password",
-            placeholder: "Confirm your password"
-          }
-        ]
-      };
-    }
-
-    if (type === "phone") {
-      return {
-        title: "Change Phone Number",
-        subtitle: "We'll send a verification code to your new number",
-        actionLabel: "Send Code",
-        fields: [
-          {
-            label: "Current Phone",
-            type: "text",
-            defaultValue: "+1 (555) 123-4567",
-            readOnly: true
-          },
-          {
-            label: "New Phone Number",
-            type: "tel",
-            placeholder: "Enter new phone number"
-          }
-        ]
-      };
-    }
-
-    return {
-      title: "Change Password",
-      subtitle: "Enter your current password and choose a new one",
-      actionLabel: "Update Password",
-      fields: [
-        {
-          label: "Current Password",
-          type: "password",
-          placeholder: "Enter current password"
-        },
-        {
-          label: "New Password",
-          type: "password",
-          placeholder: "Enter new password"
-        },
-        {
-          label: "Confirm New Password",
-          type: "password",
-          placeholder: "Confirm new password"
-        }
-      ]
-    };
-  }, [type]);
+    if (!type) return null;
+    return t.raw(type);
+  }, [t, type]);
 
   useEffect(() => {
     function onEscape(event) {
@@ -193,7 +77,7 @@ function AccountModal({ type, onClose }) {
     return () => window.removeEventListener("keydown", onEscape);
   }, [onClose]);
 
-  if (!type) return null;
+  if (!type || !config) return null;
 
   return (
     <div className="settings-modal-overlay" role="presentation" onClick={onClose}>
@@ -209,7 +93,7 @@ function AccountModal({ type, onClose }) {
             <h3>{config.title}</h3>
             <p>{config.subtitle}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label={`Close ${config.title}`}>
+          <button type="button" onClick={onClose} aria-label={config.closeAria}>
             <X size={20} />
           </button>
         </header>
@@ -230,7 +114,7 @@ function AccountModal({ type, onClose }) {
 
         <footer className="settings-account-modal-footer">
           <button type="button" className="settings-account-cancel" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </button>
           <button type="button" className="settings-account-submit" onClick={onClose}>
             {config.actionLabel}
@@ -241,56 +125,121 @@ function AccountModal({ type, onClose }) {
   );
 }
 
-export default function SettingsPage() {
-  const [activeAccountModal, setActiveAccountModal] = useState(null);
+function LanguageModal({ open, onClose }) {
+  const t = useTranslations("settings.languageModal");
+
+  if (!open) return null;
+
+  function switchLocale(locale) {
+    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; samesite=lax`;
+    window.location.reload();
+  }
 
   return (
-    <DashboardShell activePage="Settings" title="Settings" subtitle="Settings & Privacy">
+    <div className="settings-modal-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="settings-account-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("title")}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="settings-account-modal-header">
+          <div>
+            <h3>{t("title")}</h3>
+            <p>{t("subtitle")}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t("closeAria")}>
+            <X size={20} />
+          </button>
+        </header>
+
+        <div className="settings-account-modal-body">
+          <div className="settings-actions-v2">
+            <button type="button" className="settings-action-button" onClick={() => switchLocale("en")}>
+              {t("english")}
+            </button>
+            <button type="button" className="settings-action-button" onClick={() => switchLocale("ar")}>
+              {t("arabic")}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  const locale = useLocale();
+  const t = useTranslations("settings");
+
+  function readList(key) {
+    const value = t.raw(key);
+    return Array.isArray(value) ? value : [];
+  }
+
+  const privacyItems = readList("privacyItems");
+  const notificationItems = readList("notificationItems");
+  const accountItems = readList("accountItems");
+  const supportItems = readList("supportItems");
+  const [activeAccountModal, setActiveAccountModal] = useState(null);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+
+  return (
+    <DashboardShell activePageKey="settings" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="settings-page">
         <div className="settings-grid">
           <article className="settings-card-v2">
-            <SectionHeader icon={Shield} title="Privacy & Security" tone="blue" />
+            <SectionHeader icon={Shield} title={t("sections.privacy")} tone="blue" />
             <div className="settings-list-v2">
-              {privacyItems.map(({ title, description, icon: Icon }) => (
-                <div className="settings-row toggle-row" key={title}>
-                  <div className="settings-row-main">
-                    <Icon size={17} />
+              {privacyItems.map(({ title, description, icon }) => {
+                const Icon = resolveSettingsIcon(icon);
+
+                return (
+                  <div className="settings-row toggle-row" key={title}>
+                    <div className="settings-row-main">
+                      <Icon size={17} />
+                      <div>
+                        <strong>{title}</strong>
+                        <small>{description}</small>
+                      </div>
+                    </div>
+                    <Toggle />
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+
+          <article className="settings-card-v2">
+            <SectionHeader icon={User} title={t("sections.account")} tone="peach" />
+            <div className="settings-list-v2">
+              {accountItems.map(({ key, title, description, icon, tone }) => {
+                const Icon = resolveSettingsIcon(icon);
+
+                return (
+                  <button
+                    className="settings-row settings-link-row"
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveAccountModal(key)}
+                  >
+                    <span className={`settings-badge ${tone}`}>
+                      <Icon size={16} />
+                    </span>
                     <div>
                       <strong>{title}</strong>
                       <small>{description}</small>
                     </div>
-                  </div>
-                  <Toggle />
-                </div>
-              ))}
+                    <ChevronRight size={18} />
+                  </button>
+                );
+              })}
             </div>
           </article>
 
           <article className="settings-card-v2">
-            <SectionHeader icon={User} title="Account" tone="peach" />
-            <div className="settings-list-v2">
-              {accountItems.map(({ key, title, description, icon: Icon, tone }) => (
-                <button
-                  className="settings-row settings-link-row"
-                  key={key}
-                  type="button"
-                  onClick={() => setActiveAccountModal(key)}
-                >
-                  <span className={`settings-badge ${tone}`}>
-                    <Icon size={16} />
-                  </span>
-                  <div>
-                    <strong>{title}</strong>
-                    <small>{description}</small>
-                  </div>
-                  <ChevronRight size={18} />
-                </button>
-              ))}
-            </div>
-          </article>
-
-          <article className="settings-card-v2">
-            <SectionHeader icon={Bell} title="Notifications" tone="peach" />
+            <SectionHeader icon={Bell} title={t("sections.notifications")} tone="peach" />
             <div className="settings-list-v2">
               {notificationItems.map(({ title, description }) => (
                 <div className="settings-row toggle-row" key={title}>
@@ -307,18 +256,28 @@ export default function SettingsPage() {
           </article>
 
           <article className="settings-card-v2">
-            <SectionHeader icon={HelpCircle} title="Support & Legal" tone="mint" />
+            <SectionHeader icon={HelpCircle} title={t("sections.support")} tone="mint" />
             <div className="settings-list-v2">
-              {supportItems.map(({ title, subtitle, icon: Icon }) => (
-                <button className="settings-row settings-link-row" key={title} type="button">
-                  <Icon size={16} />
-                  <div>
-                    <strong>{title}</strong>
-                    {subtitle ? <small>{subtitle}</small> : null}
-                  </div>
-                  <ChevronRight size={18} />
-                </button>
-              ))}
+              {supportItems.map(({ title, subtitle, icon }) => {
+                const Icon = resolveSettingsIcon(icon);
+                const resolvedSubtitle = icon === "language" ? t(`languages.${locale}`) : subtitle;
+
+                return (
+                  <button
+                    className="settings-row settings-link-row"
+                    key={title}
+                    type="button"
+                    onClick={icon === "language" ? () => setIsLanguageModalOpen(true) : undefined}
+                  >
+                    <Icon size={16} />
+                    <div>
+                      <strong>{title}</strong>
+                      {resolvedSubtitle ? <small>{resolvedSubtitle}</small> : null}
+                    </div>
+                    <ChevronRight size={18} />
+                  </button>
+                );
+              })}
             </div>
           </article>
         </div>
@@ -326,15 +285,16 @@ export default function SettingsPage() {
         <div className="settings-actions-v2">
           <button type="button" className="settings-action-button">
             <LogOut size={15} />
-            Log Out
+            {t("actions.logout")}
           </button>
           <button type="button" className="settings-action-button danger">
             <Trash2 size={15} />
-            Delete Account
+            {t("actions.deleteAccount")}
           </button>
         </div>
       </section>
       <AccountModal type={activeAccountModal} onClose={() => setActiveAccountModal(null)} />
+      <LanguageModal open={isLanguageModalOpen} onClose={() => setIsLanguageModalOpen(false)} />
     </DashboardShell>
   );
 }

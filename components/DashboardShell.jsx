@@ -3,53 +3,19 @@
 import { Bell, Check, Gift, Heart, Inbox, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 
-const notifications = [
-  {
-    id: 1,
-    icon: Gift,
-    accent: "orange",
-    title: "Sarah Ahmad sent you a Red Rose",
-    subtitle: "2 min ago",
-    badge: "New"
-  },
-  {
-    id: 2,
-    icon: Heart,
-    accent: "pink",
-    title: "Fatima Hassan liked your profile",
-    subtitle: "15 min ago",
-    badge: "New"
-  },
-  {
-    id: 3,
-    icon: Gift,
-    accent: "purple",
-    title: "Amira Khan viewed your story",
-    subtitle: "1 hour ago",
-    badge: "New"
-  },
-  {
-    id: 4,
-    icon: Heart,
-    accent: "green",
-    title: "Layla Mohammed matched with you! Start chatting now",
-    subtitle: "3 hours ago",
-    actions: ["Send Message", "View Profile"]
-  },
-  {
-    id: 5,
-    icon: Gift,
-    accent: "orange",
-    title: "Zara Ali sent you a Diamond Ring",
-    subtitle: "5 hours ago"
-  }
-];
-
 function NotificationsPopup({ open, onClose }) {
+  const t = useTranslations("dashboard.popup");
+  const notifications = t.raw("items");
+
   if (!open) return null;
+
+  function resolveIcon(name) {
+    return name === "heart" ? Heart : Gift;
+  }
 
   return (
     <div className="notifications-overlay" onClick={onClose} role="presentation">
@@ -57,14 +23,14 @@ function NotificationsPopup({ open, onClose }) {
         className="notifications-popup"
         role="dialog"
         aria-modal="true"
-        aria-label="Notifications"
+        aria-label={t("ariaLabel")}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="notifications-header">
           <div className="notifications-title">
-            Notifications <span>3</span>
+            {t("title")} <span>{t("count")}</span>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close notifications">
+          <button type="button" onClick={onClose} aria-label={t("closeAria")}>
             <X size={17} />
           </button>
         </header>
@@ -72,19 +38,19 @@ function NotificationsPopup({ open, onClose }) {
         <div className="notifications-toolbar">
           <div className="notification-tabs">
             <button type="button" className="active">
-              All
+              {t("tabs.all")}
             </button>
-            <button type="button">Unread (3)</button>
+            <button type="button">{t("tabs.unread")}</button>
           </div>
           <button type="button" className="mark-read-button">
             <Check size={14} />
-            Mark all read
+            {t("markRead")}
           </button>
         </div>
 
         <div className="notifications-list">
           {notifications.map((item) => {
-            const Icon = item.icon;
+            const Icon = resolveIcon(item.icon);
 
             return (
               <article className="notification-item" key={item.id}>
@@ -112,7 +78,7 @@ function NotificationsPopup({ open, onClose }) {
                 </div>
 
                 <div className="notification-side">
-                  <button type="button" aria-label="Dismiss notification">
+                  <button type="button" aria-label={t("dismissAria")}>
                     <X size={14} />
                   </button>
                 </div>
@@ -125,8 +91,9 @@ function NotificationsPopup({ open, onClose }) {
   );
 }
 
-function Topbar({ title, subtitle }) {
+function Topbar({ title, subtitle, notificationCount }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const t = useTranslations("dashboard");
 
   useEffect(() => {
     if (!isNotificationsOpen) return;
@@ -144,7 +111,7 @@ function Topbar({ title, subtitle }) {
   return (
     <>
       <header className="discover-topbar">
-        <button className="mobile-menu" type="button" aria-label="Open menu">
+        <button className="mobile-menu" type="button" aria-label={t("mobileMenuAria")}>
           <Menu size={22} />
         </button>
         <div>
@@ -153,25 +120,25 @@ function Topbar({ title, subtitle }) {
         </div>
 
         <div className="topbar-actions">
-          <Link href="/messages" className="topbar-inbox-button" aria-label="Inbox">
+          <Link href="/messages" className="topbar-inbox-button" aria-label={t("inboxAria")}>
             <Inbox size={20} />
-            Inbox
+            {t("inbox")}
           </Link>
           <button
             type="button"
-            aria-label="Notifications"
+            aria-label={t("notificationsAria")}
             className="notification-button"
             onClick={() => setIsNotificationsOpen((value) => !value)}
           >
             <Bell size={25} />
-            <span>5</span>
+            <span>{notificationCount}</span>
           </button>
-          <Link href="/profile" aria-label="Go to profile">
+          <Link href="/profile" aria-label={t("profileAria")}>
             <Image
               width={40}
               height={40}
               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=96&q=80"
-              alt="Your profile"
+              alt={t("profileImageAlt")}
             />
           </Link>
         </div>
@@ -181,12 +148,14 @@ function Topbar({ title, subtitle }) {
   );
 }
 
-export default function DashboardShell({ activePage, title, subtitle, children }) {
+export default function DashboardShell({ activePageKey, title, subtitle, children }) {
+  const t = useTranslations("dashboard");
+
   return (
     <main className="discover-app">
-      <Sidebar activePage={activePage} />
+      <Sidebar activePageKey={activePageKey} />
       <div className="discover-main">
-        <Topbar title={title} subtitle={subtitle} />
+        <Topbar title={title} subtitle={subtitle} notificationCount={t("notificationCount")} />
         <div className="discover-content">{children}</div>
       </div>
     </main>

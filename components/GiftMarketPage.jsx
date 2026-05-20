@@ -1,133 +1,50 @@
 "use client";
 
 import { Gift } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import DashboardShell from "./DashboardShell";
 import GiftCard from "./GiftCard";
 import GiftSendModal from "./GiftSendModal";
-
-const categories = ["All Gifts", "Romantic", "Luxury", "Special", "Seasonal"];
-
-const gifts = [
-  {
-    icon: "\u2764\uFE0F",
-    name: "Heart",
-    description: "Send love and affection",
-    category: "Romantic"
-  },
-  {
-    icon: "\uD83C\uDF39",
-    name: "Rose",
-    description: "A classic symbol of romance",
-    category: "Romantic"
-  },
-  {
-    icon: "\uD83C\uDF6B",
-    name: "Chocolate",
-    description: "Sweet and delightful",
-    category: "Special"
-  },
-  {
-    icon: "\uD83D\uDC8D",
-    name: "Ring",
-    description: "A precious promise",
-    category: "Luxury"
-  },
-  {
-    icon: "\uD83D\uDC8E",
-    name: "Diamond",
-    description: "Rare and valuable",
-    category: "Luxury"
-  },
-  {
-    icon: "\uD83D\uDC51",
-    name: "Crown",
-    description: "Treat them like royalty",
-    category: "Luxury"
-  },
-  {
-    icon: "\uD83D\uDC90",
-    name: "Bouquet",
-    description: "A beautiful arrangement",
-    category: "Romantic"
-  },
-  {
-    icon: "\uD83C\uDF7E",
-    name: "Champagne",
-    description: "Celebrate in style",
-    category: "Seasonal"
-  },
-  {
-    icon: "\u2B50",
-    name: "Star",
-    description: "You're a star!",
-    category: "Special"
-  },
-  {
-    icon: "\uD83E\uDDF8",
-    name: "Teddy Bear",
-    description: "Cute and cuddly",
-    category: "Special"
-  },
-  {
-    icon: "\uD83C\uDF82",
-    name: "Cake",
-    description: "Perfect for celebrations",
-    category: "Seasonal"
-  },
-  {
-    icon: "\uD83C\uDF81",
-    name: "Gift Box",
-    description: "A mystery surprise",
-    category: "Seasonal"
-  }
-];
-
-function getCategoryPrefix(category) {
-  if (category === "Romantic") return "\uD83D\uDC95 ";
-  if (category === "Luxury") return "\uD83D\uDC8E ";
-  if (category === "Special") return "\u2728 ";
-  if (category === "Seasonal") return "\uD83C\uDF89 ";
-  return "";
-}
+import SectionTitle from "./SectionTitle";
 
 export default function GiftMarketPage() {
-  const [activeCategory, setActiveCategory] = useState("All Gifts");
+  const t = useTranslations("giftMarket");
+  const categories = t.raw("categories");
+  const gifts = t.raw("gifts");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [selectedGift, setSelectedGift] = useState(null);
 
   const visibleGifts = useMemo(() => {
-    if (activeCategory === "All Gifts") return gifts;
+    if (activeCategory === "all") return gifts;
     return gifts.filter((gift) => gift.category === activeCategory);
-  }, [activeCategory]);
+  }, [activeCategory, gifts]);
 
   return (
-    <DashboardShell activePage="Gift Market" title="Gift Market" subtitle="Express your feelings with gifts">
+    <DashboardShell activePageKey="giftMarket" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="gift-market">
         <div className="gift-heading">
-          <h2>
-            <Gift size={22} />
-            Gift Market
-          </h2>
-          <p>Send digital gifts to show appreciation and connect with others</p>
+          <SectionTitle icon={Gift} iconProps={{ size: 22 }} title={t("heading")} />
+          <p>{t("intro")}</p>
         </div>
 
-        <div className="gift-categories" aria-label="Gift categories">
+        <div className="gift-categories" aria-label={t("categoriesAria")}>
           {categories.map((category) => (
             <button
-              className={category === activeCategory ? "active" : ""}
+              className={category.id === activeCategory ? "active" : ""}
               type="button"
-              key={category}
-              onClick={() => setActiveCategory(category)}
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
             >
-              {getCategoryPrefix(category)}
-              {category}
+              {category.prefix}
+              {category.label}
             </button>
           ))}
         </div>
 
         <div className="gift-grid">
           {visibleGifts.map((gift) => (
-            <GiftCard key={gift.name} gift={gift} onClick={setSelectedGift} />
+            <GiftCard key={gift.id} gift={gift} onClick={setSelectedGift} />
           ))}
         </div>
       </section>

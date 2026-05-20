@@ -1,92 +1,61 @@
 import { ArrowLeft, Camera, Image as ImageIcon, Sparkles, Video } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import DashboardShell from "./DashboardShell";
-
-const actions = [
-  {
-    title: "Take Photo",
-    description: "Use your camera",
-    icon: Camera,
-    tone: "orange"
-  },
-  {
-    title: "Upload Photo",
-    description: "From gallery",
-    icon: ImageIcon,
-    tone: "purple"
-  },
-  {
-    title: "Upload Video",
-    description: "Share a video",
-    icon: Video,
-    tone: "orange"
-  }
-];
-
-const friendStories = [
-  {
-    name: "Sarah",
-    image:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=360&q=85"
-  },
-  {
-    name: "Ahmed",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=360&q=85"
-  },
-  {
-    name: "Maya",
-    image:
-      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=360&q=85"
-  },
-  {
-    name: "Omar",
-    image:
-      "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=360&q=85"
-  }
-];
+import SectionTitle from "./SectionTitle";
 
 export default function StoriesPage() {
+  const t = useTranslations("stories");
+  const actions = t.raw("actions");
+  const friendStories = t.raw("friendStories");
+
+  function getActionIcon(name) {
+    if (name === "image") return ImageIcon;
+    if (name === "video") return Video;
+    return Camera;
+  }
+
   return (
-    <DashboardShell activePage="Stories" title="Stories" subtitle="Share your moments">
+    <DashboardShell activePageKey="stories" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="stories-page">
         <div className="stories-panel">
           <div className="stories-title-row">
-            <button type="button" aria-label="Go back">
+            <button type="button" aria-label={t("goBackAria")}>
               <ArrowLeft size={18} />
             </button>
-            <h2>
-              <Camera size={22} />
-              Camera &amp; Stories
-            </h2>
+            <SectionTitle icon={Camera} iconProps={{ size: 22 }} title={t("heading")} />
           </div>
 
-          <p className="stories-intro">Share moments that disappear in 24 hours</p>
+          <p className="stories-intro">{t("intro")}</p>
 
           <div className="story-action-grid">
-            {actions.map(({ title, description, icon: Icon, tone }) => (
-              <button className="story-action-card" type="button" key={title}>
-                <span className={`story-action-icon ${tone}`}>
-                  <Icon size={30} strokeWidth={2.1} />
-                </span>
-                <strong>{title}</strong>
-                <small>{description}</small>
-              </button>
-            ))}
+            {actions.map(({ title, description, icon, tone }) => {
+              const Icon = getActionIcon(icon);
+
+              return (
+                <button className="story-action-card" type="button" key={title}>
+                  <span className={`story-action-icon ${tone}`}>
+                    <Icon size={30} strokeWidth={2.1} />
+                  </span>
+                  <strong>{title}</strong>
+                  <small>{description}</small>
+                </button>
+              );
+            })}
           </div>
 
-          <h3>Your Active Stories</h3>
+          <h3>{t("activeStories")}</h3>
           <div className="empty-stories">
             <Sparkles size={48} />
-            <strong>No active stories</strong>
-            <span>Share your first moment above!</span>
+            <strong>{t("noActiveStories")}</strong>
+            <span>{t("firstMoment")}</span>
           </div>
 
-          <h3>Friends Stories</h3>
+          <h3>{t("friendsStories")}</h3>
           <div className="friend-story-grid">
             {friendStories.map((story) => (
               <article className="friend-story-card" key={story.name}>
-                <Image src={story.image} alt={`${story.name}'s story`} fill sizes="160px" />
+                <Image src={story.image} alt={t("friendStoryAlt", { name: story.name })} fill sizes="160px" />
               </article>
             ))}
           </div>

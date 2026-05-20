@@ -2,50 +2,16 @@
 
 import { Camera, Edit, Gift, Images, MapPin, Plus, X } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import DashboardShell from "./DashboardShell";
 
-const stats = [
-  { label: "Connections", value: "124", tone: "peach" },
-  { label: "Gifts Sent", value: "38", tone: "purple" },
-  { label: "Gifts Received", value: "5", tone: "cream" }
-];
-
-const gifts = [
-  { icon: "\u2764\uFE0F", from: "Ahmed", time: "2 hours ago" },
-  { icon: "\uD83C\uDF39", from: "Sarah", time: "5 hours ago" },
-  { icon: "\uD83D\uDC8E", from: "Maya", time: "1 day ago" }
-];
-
-const photos = [
-  "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=420&q=80",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=420&q=80",
-  "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=420&q=80",
-  "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=420&q=80",
-  "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=420&q=80"
-];
-
-const suggestedInterests = [
-  "Photography",
-  "Sports",
-  "Reading",
-  "Cooking",
-  "Technology",
-  "Fashion",
-  "Movies",
-  "Gaming",
-  "Fitness",
-  "Dancing",
-  "Writing",
-  "Nature",
-  "Coffee"
-];
-
 function EditProfileModal({ open, onClose }) {
-  const [bio, setBio] = useState("Tell us about yourself...");
-  const [interests, setInterests] = useState(["Travel", "Art", "Music"]);
+  const t = useTranslations("profile.editModal");
+  const [bio, setBio] = useState(t("bioDefault"));
+  const [interests, setInterests] = useState(t.raw("initialInterests"));
   const [customInterest, setCustomInterest] = useState("");
+  const suggestedInterests = t.raw("suggestedInterests");
 
   useEffect(() => {
     if (!open) return;
@@ -83,12 +49,12 @@ function EditProfileModal({ open, onClose }) {
         className="profile-edit-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Edit Profile"
+        aria-label={t("title")}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="profile-edit-header">
-          <h3>Edit Profile</h3>
-          <button type="button" onClick={onClose} aria-label="Close edit profile">
+          <h3>{t("title")}</h3>
+          <button type="button" onClick={onClose} aria-label={t("closeAria")}>
             <X size={17} />
           </button>
         </header>
@@ -98,43 +64,43 @@ function EditProfileModal({ open, onClose }) {
             <div className="profile-edit-avatar">
               <Image
                 src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=220&q=85"
-                alt="Edit profile avatar"
+                alt={t("avatarAlt")}
                 width={92}
                 height={92}
               />
-              <button type="button" aria-label="Upload profile photo" className="profile-edit-photo-btn">
+              <button type="button" aria-label={t("uploadAria")} className="profile-edit-photo-btn">
                 <Camera size={15} />
               </button>
             </div>
-            <p>Click to upload a new photo</p>
+            <p>{t("uploadHint")}</p>
           </div>
 
           <label className="profile-edit-field">
-            <span>Name</span>
-            <input defaultValue="My Profile" />
+            <span>{t("name")}</span>
+            <input defaultValue={t("nameDefault")} />
           </label>
 
           <label className="profile-edit-field">
-            <span>Age</span>
-            <input defaultValue="26" />
+            <span>{t("age")}</span>
+            <input defaultValue={t("ageDefault")} />
           </label>
 
           <label className="profile-edit-field">
-            <span>Location</span>
+            <span>{t("location")}</span>
             <div className="profile-edit-location-wrap">
               <MapPin size={15} />
-              <input defaultValue="New York, USA" />
+              <input defaultValue={t("locationDefault")} />
             </div>
           </label>
 
           <label className="profile-edit-field">
-            <span>Bio</span>
+            <span>{t("bio")}</span>
             <textarea value={bio} onChange={(event) => setBio(event.target.value)} rows={3} />
-            <small>{Math.min(bio.length, 200)}/200 characters</small>
+            <small>{t("bioCount", { count: Math.min(bio.length, 200) })}</small>
           </label>
 
           <div className="profile-edit-field">
-            <span>Interests (Max 8)</span>
+            <span>{t("interests")}</span>
             <div className="profile-interest-chips">
               {interests.map((interest) => (
                 <button type="button" key={interest} className="profile-interest-chip" onClick={() => removeInterest(interest)}>
@@ -154,15 +120,15 @@ function EditProfileModal({ open, onClose }) {
                     handleCustomInterest();
                   }
                 }}
-                placeholder="Add custom interest..."
+                placeholder={t("addCustomPlaceholder")}
               />
-              <button type="button" onClick={handleCustomInterest} aria-label="Add custom interest">
+              <button type="button" onClick={handleCustomInterest} aria-label={t("addCustomAria")}>
                 <Plus size={16} />
               </button>
             </div>
 
             <div className="profile-suggested-row">
-              <p>Suggested:</p>
+              <p>{t("suggested")}</p>
               <div className="profile-suggested-grid">
                 {suggestedInterests.map((interest) => (
                   <button type="button" key={interest} onClick={() => addInterest(interest)}>
@@ -176,10 +142,10 @@ function EditProfileModal({ open, onClose }) {
 
         <footer className="profile-edit-footer">
           <button type="button" className="profile-cancel-btn" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </button>
           <button type="button" className="profile-save-btn" onClick={onClose}>
-            Save Changes
+            {t("save")}
           </button>
         </footer>
       </section>
@@ -188,41 +154,44 @@ function EditProfileModal({ open, onClose }) {
 }
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
+  const stats = t.raw("stats");
+  const gifts = t.raw("receivedGifts");
+  const photos = t.raw("photos");
+  const tags = t.raw("tags");
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   return (
-    <DashboardShell activePage="Profile" title="Profile" subtitle="Your profile and settings">
+    <DashboardShell activePageKey="profile" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="profile-page">
         <article className="profile-summary-card">
           <button className="edit-profile-button" type="button" onClick={() => setIsEditOpen(true)}>
             <Edit size={17} />
-            Edit
+            {t("edit")}
           </button>
 
           <div className="profile-summary-head">
             <Image
               src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=180&q=85"
-              alt="My profile"
+              alt={t("avatarAlt")}
               width={84}
               height={84}
             />
             <div>
-              <h2>My Profile</h2>
+              <h2>{t("myProfile")}</h2>
               <p>
                 <MapPin size={16} />
-                New York, USA
+                {t("location")}
               </p>
               <div className="profile-tags">
-                <span>Travel</span>
-                <span>Art</span>
-                <span>Music</span>
+                {tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
               </div>
             </div>
           </div>
 
-          <p className="profile-bio">
-            {"Living life one adventure at a time \u2728 Love connecting with kind souls and spreading positivity \uD83D\uDC95"}
-          </p>
+          <p className="profile-bio">{t("bio")}</p>
 
           <div className="profile-stats">
             {stats.map((stat) => (
@@ -238,7 +207,7 @@ export default function ProfilePage() {
           <div className="received-gifts-head">
             <h2>
               <Gift size={20} />
-              Gifts Received
+              {t("giftsReceivedHeading")}
             </h2>
           </div>
 
@@ -247,7 +216,7 @@ export default function ProfilePage() {
               <div className="received-gift" key={`${gift.from}-${gift.time}`}>
                 <span className="received-gift-icon">{gift.icon}</span>
                 <div>
-                  <strong>From {gift.from}</strong>
+                  <strong>{t("fromPrefix", { name: gift.from })}</strong>
                   <small>{gift.time}</small>
                 </div>
               </div>
@@ -258,14 +227,14 @@ export default function ProfilePage() {
         <article className="profile-photos-panel">
           <h2>
             <Images size={20} />
-            Photos
+            {t("photosHeading")}
           </h2>
           <div className="profile-photos-grid">
             {photos.map((photo, index) => (
               <div className={index === 0 ? "main-photo" : ""} key={`profile-photo-${index}`}>
                 <Image
                   src={photo}
-                  alt={`Profile photo ${index + 1}`}
+                  alt={t("photoAlt", { index: index + 1 })}
                   fill
                   sizes="(max-width: 620px) 100vw, 50vw"
                 />

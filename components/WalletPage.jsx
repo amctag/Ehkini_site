@@ -1,19 +1,6 @@
 import { CreditCard, DollarSign, Gift, Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 import DashboardShell from "./DashboardShell";
-
-const walletActions = [
-  { icon: CreditCard, title: "Payment Methods", subtitle: "Manage cards", tone: "blue" },
-  { icon: Gift, title: "Referral Bonus", subtitle: "Earn $5", tone: "green" },
-  { icon: null, title: "VIP Membership", subtitle: "Go premium", tone: "purple", emoji: "👑" }
-];
-
-const transactions = [
-  { type: "up", title: "Received Diamond from Maya", date: "2024-11-06", amount: "+$10" },
-  { type: "down", title: "Sent Ring to Sarah", date: "2024-11-06", amount: "-$5" },
-  { type: "plus", title: "Initial bonus", date: "2024-11-05", amount: "+$20" },
-  { type: "up", title: "Received Crown from Omar", date: "2024-11-04", amount: "+$8" },
-  { type: "down", title: "Sent Rose to Ahmed", date: "2024-11-04", amount: "-$2" }
-];
 
 function TransactionIcon({ type }) {
   if (type === "down") {
@@ -39,16 +26,26 @@ function TransactionIcon({ type }) {
   );
 }
 
+function WalletActionIcon({ action }) {
+  if (action.icon === "card") return <CreditCard size={24} />;
+  if (action.icon === "gift") return <Gift size={24} />;
+  return action.emoji;
+}
+
 export default function WalletPage() {
+  const t = useTranslations("wallet");
+  const walletActions = t.raw("walletActions");
+  const transactions = t.raw("transactions");
+
   return (
-    <DashboardShell activePage="Wallet" title="Wallet" subtitle="Manage your earnings and points">
+    <DashboardShell activePageKey="wallet" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="wallet-page">
         <article className="wallet-hero">
           <div className="wallet-hero-head">
             <div>
-              <p>Total Balance</p>
+              <p>{t("totalBalance")}</p>
               <h2>
-                $20 <span>Active</span>
+                $20 <span>{t("active")}</span>
               </h2>
             </div>
             <span className="wallet-hero-icon">
@@ -59,12 +56,12 @@ export default function WalletPage() {
           <div className="wallet-summary-grid">
             <div>
               <TrendingUp size={17} />
-              <span>Earned</span>
+              <span>{t("earned")}</span>
               <strong>$18</strong>
             </div>
             <div>
               <TrendingDown size={17} />
-              <span>Spent</span>
+              <span>{t("spent")}</span>
               <strong>$7</strong>
             </div>
           </div>
@@ -72,30 +69,32 @@ export default function WalletPage() {
           <div className="wallet-hero-actions">
             <button className="wallet-add-points" type="button">
               <Plus size={17} />
-              Add Points
+              {t("addPoints")}
             </button>
             <button className="wallet-withdraw" type="button">
               <DollarSign size={17} />
-              Withdraw
+              {t("withdraw")}
             </button>
           </div>
-          <p className="wallet-minimum">Minimum $50 required to withdraw</p>
+          <p className="wallet-minimum">{t("minimumWithdraw")}</p>
         </article>
 
         <div className="wallet-action-grid">
-          {walletActions.map(({ icon: Icon, title, subtitle, tone, emoji }) => (
-            <article className="wallet-action-card" key={title}>
-              <span className={tone}>{Icon ? <Icon size={24} /> : emoji}</span>
+          {walletActions.map((action) => (
+            <article className="wallet-action-card" key={action.title}>
+              <span className={action.tone}>
+                <WalletActionIcon action={action} />
+              </span>
               <div>
-                <h3>{title}</h3>
-                <p>{subtitle}</p>
+                <h3>{action.title}</h3>
+                <p>{action.subtitle}</p>
               </div>
             </article>
           ))}
         </div>
 
         <article className="transaction-panel">
-          <h2>Transaction History</h2>
+          <h2>{t("transactionHistory")}</h2>
           <div className="transaction-list">
             {transactions.map((transaction) => (
               <div className="transaction-row" key={`${transaction.title}-${transaction.date}`}>

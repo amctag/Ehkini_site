@@ -372,19 +372,23 @@ a {
 .app-logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #07064f;
-  font-size: 40px;
-  font-weight: 800;
   line-height: 1;
-  letter-spacing: 0;
 }
 
 .app-logo .brand-mark {
-  width: 34px;
-  height: 34px;
-  color: #f97316;
-  filter: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.app-logo-label {
+  color: #07064f;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1;
 }
 
 .balance-card {
@@ -984,7 +988,7 @@ a {
   width: 100%;
   border: 0;
   padding: 0;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -1732,7 +1736,7 @@ a {
   color: #172033;
   background: transparent;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -3234,7 +3238,7 @@ a {
 
 .settings-link-row {
   width: 100%;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -3415,6 +3419,28 @@ a {
   font-weight: 700;
 }
 
+
+[dir="rtl"] .discover-sidebar {
+  left: auto;
+  right: 0;
+  border-right: 0;
+  border-left: 1px solid #e7e7ea;
+}
+
+[dir="rtl"] .discover-main {
+  margin-left: 0;
+  margin-right: 286px;
+}
+
+[dir="rtl"] .topbar-actions {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .settings-link-row > :last-child {
+  margin-left: 0;
+  margin-right: auto;
+}
 @media (max-width: 1180px) {
   .people-grid {
     grid-template-columns: repeat(2, minmax(240px, 1fr));
@@ -3461,6 +3487,10 @@ a {
 
   .discover-main {
     margin-left: 0;
+  }
+
+  [dir="rtl"] .discover-main {
+    margin-right: 0;
   }
 
   .mobile-menu {
@@ -3757,3 +3787,7 @@ a {
     padding: 22px 20px 24px;
   }
 }
+
+
+
+

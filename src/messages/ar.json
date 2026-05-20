@@ -1,0 +1,1063 @@
+{
+  "metadata": {
+    "title": "إحكيني",
+    "description": "تسجيل الدخول إلى إحكيني"
+  },
+  "appLogo": {
+    "name": "Ehkini",
+    "ariaLabel": "إحكيني"
+  },
+  "authShell": {
+    "brandTitle": "إحكيني",
+    "brandSubtitle": "تواصل مع الشخص المناسب لك",
+    "defaultLabel": "المصادقة",
+    "loginLabel": "تسجيل الدخول",
+    "signupLabel": "إنشاء حساب",
+    "detailsLabel": "التفاصيل",
+    "profilePreferencesLabel": "الملف الشخصي والتفضيلات"
+  },
+  "loginCard": {
+    "title": "مرحباً بعودتك",
+    "subtitle": "سجل الدخول إلى حسابك",
+    "identifierLabel": "البريد الإلكتروني أو الهاتف",
+    "identifierPlaceholder": "أدخل بريدك الإلكتروني أو رقم هاتفك",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "loginButton": "تسجيل الدخول",
+    "noAccount": "ليس لديك حساب؟",
+    "signupLink": "إنشاء حساب"
+  },
+  "signupForm": {
+    "title": "إنشاء حساب",
+    "subtitle": "ابدأ بإدخال معلوماتك الأساسية",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "lastNamePlaceholder": "اسم العائلة",
+    "dateOfBirth": "تاريخ الميلاد",
+    "gender": "الجنس",
+    "selectGender": "اختر الجنس",
+    "genders": {
+      "female": "أنثى",
+      "male": "ذكر",
+      "nonBinary": "غير ثنائي",
+      "preferNotToSay": "أفضل عدم الإفصاح"
+    },
+    "phone": "رقم الهاتف",
+    "phonePlaceholder": "أدخل رقم هاتفك",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أنشئ كلمة مرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "confirmPasswordPlaceholder": "أكد كلمة المرور",
+    "terms": "أوافق على الشروط والأحكام",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "signinLink": "تسجيل الدخول"
+  },
+  "detailsForm": {
+    "title": "Details",
+    "subtitle": "These fields are optional",
+    "optional": "Optional",
+    "occupation": "Occupation",
+    "occupationPlaceholder": "What do you do?",
+    "education": "Education",
+    "educationPlaceholder": "School, degree, or field",
+    "interests": "Interests",
+    "interestItems": [
+      "Travel",
+      "Music",
+      "Movies",
+      "Fitness",
+      "Cooking",
+      "Reading",
+      "Art",
+      "Gaming",
+      "Coffee",
+      "Outdoors"
+    ],
+    "back": "Back",
+    "continue": "Continue"
+  },
+  "profilePreferencesForm": {
+    "title": "Profile & Preferences",
+    "subtitle": "Add a little more about yourself",
+    "optional": "Optional",
+    "profilePhoto": "Profile Photo",
+    "location": "Location",
+    "locationPlaceholder": "City or area",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell people a bit about you",
+    "back": "Back",
+    "continue": "Continue"
+  },
+  "sidebar": {
+    "searchPlaceholder": "بحث",
+    "searchAriaLabel": "Search sidebar",
+    "navAriaLabel": "Main navigation",
+    "items": {
+      "discover": "اكتشف",
+      "giftMarket": "سوق الهدايا",
+      "stories": "القصص",
+      "messages": "الرسائل",
+      "friends": "الأصدقاء",
+      "profile": "الملف الشخصي"
+    },
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
+  },
+  "dashboard": {
+    "mobileMenuAria": "Open menu",
+    "inbox": "Inbox",
+    "inboxAria": "Inbox",
+    "notificationsAria": "Notifications",
+    "profileAria": "Go to profile",
+    "profileImageAlt": "Your profile",
+    "notificationCount": "5",
+    "popup": {
+      "ariaLabel": "Notifications",
+      "closeAria": "Close notifications",
+      "title": "Notifications",
+      "count": "3",
+      "tabs": {
+        "all": "All",
+        "unread": "Unread (3)"
+      },
+      "markRead": "Mark all read",
+      "dismissAria": "Dismiss notification",
+      "items": [
+        {
+          "id": 1,
+          "icon": "gift",
+          "accent": "orange",
+          "title": "Sarah Ahmad sent you a Red Rose",
+          "subtitle": "2 min ago",
+          "badge": "New"
+        },
+        {
+          "id": 2,
+          "icon": "heart",
+          "accent": "pink",
+          "title": "Fatima Hassan liked your profile",
+          "subtitle": "15 min ago",
+          "badge": "New"
+        },
+        {
+          "id": 3,
+          "icon": "gift",
+          "accent": "purple",
+          "title": "Amira Khan viewed your story",
+          "subtitle": "1 hour ago",
+          "badge": "New"
+        },
+        {
+          "id": 4,
+          "icon": "heart",
+          "accent": "green",
+          "title": "Layla Mohammed matched with you! Start chatting now",
+          "subtitle": "3 hours ago",
+          "actions": [
+            "Send Message",
+            "View Profile"
+          ]
+        },
+        {
+          "id": 5,
+          "icon": "gift",
+          "accent": "orange",
+          "title": "Zara Ali sent you a Diamond Ring",
+          "subtitle": "5 hours ago"
+        }
+      ]
+    }
+  },
+  "discover": {
+    "pageTitle": "Discover",
+    "pageSubtitle": "Find your perfect match",
+    "storiesHeading": "Stories",
+    "yourStory": "Your Story",
+    "yourStoryAria": "Go to stories page",
+    "peopleHeading": "Discover People",
+    "search": "Search",
+    "filters": "Filters",
+    "storyImageAlt": "{name}'s story",
+    "storyItems": [
+      {
+        "name": "Sarah",
+        "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=260&q=80"
+      },
+      {
+        "name": "Ahmed",
+        "image": "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=260&q=80"
+      },
+      {
+        "name": "Maya",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=260&q=80"
+      },
+      {
+        "name": "Omar",
+        "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=260&q=80"
+      }
+    ],
+    "people": [
+      {
+        "name": "Sarah",
+        "age": 26,
+        "distance": "2 km away",
+        "bio": "Love traveling, photography, and meeting new people",
+        "tags": [
+          "Travel",
+          "Photography",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Ahmed",
+        "age": 29,
+        "distance": "5 km away",
+        "bio": "Entrepreneur | Coffee enthusiast | Looking for meaningful connections",
+        "tags": [
+          "Business",
+          "Coffee",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Maya",
+        "age": 24,
+        "distance": "8 km away",
+        "bio": "Artist & dreamer. Believer in kindness and good vibes",
+        "tags": [
+          "Art",
+          "Music",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Omar",
+        "age": 31,
+        "distance": "12 km away",
+        "bio": "Software engineer who loves hiking and good conversations",
+        "tags": [
+          "Technology",
+          "Hiking",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Layla",
+        "age": 27,
+        "distance": "4 km away",
+        "bio": "Interior designer who enjoys galleries, coffee, and weekend road trips",
+        "tags": [
+          "Design",
+          "Coffee",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Kareem",
+        "age": 30,
+        "distance": "7 km away",
+        "bio": "Fitness coach, foodie, and fan of spontaneous adventures",
+        "tags": [
+          "Fitness",
+          "Food",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Nour",
+        "age": 25,
+        "distance": "10 km away",
+        "bio": "Book lover and musician looking for meaningful conversations",
+        "tags": [
+          "Books",
+          "Music",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=720&q=85"
+      },
+      {
+        "name": "Samir",
+        "age": 33,
+        "distance": "14 km away",
+        "bio": "Photographer who spends free time hiking and exploring new places",
+        "tags": [
+          "Photography",
+          "Travel",
+          "+1"
+        ],
+        "image": "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=720&q=85"
+      }
+    ]
+  },
+  "friends": {
+    "pageTitle": "Friends",
+    "pageSubtitle": "Manage your connections",
+    "myFriends": "My Friends",
+    "friendsCount": "6 Friends",
+    "searchPlaceholder": "Search friends...",
+    "filters": {
+      "onlineOnly": "Online Only",
+      "recent": "Recent",
+      "alphabetical": "A-Z"
+    },
+    "suggestedHeading": "Suggested Friends",
+    "friend": {
+      "moreOptionsAria": "More options for {name}",
+      "messageAria": "Message {name}",
+      "callAria": "Call {name}",
+      "videoAria": "Video call {name}",
+      "giftAria": "Send gift to {name}",
+      "message": "Message"
+    },
+    "addFriend": "Add Friend",
+    "friendsList": [
+      {
+        "id": 1,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      },
+      {
+        "id": 2,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      },
+      {
+        "id": 3,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      },
+      {
+        "id": 4,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      },
+      {
+        "id": 5,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      },
+      {
+        "id": 6,
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "Active now",
+        "mutual": "12 mutual friends",
+        "connected": "Connected 2 months ago",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80"
+      }
+    ],
+    "suggestions": [
+      {
+        "name": "Suggested User 1",
+        "location": "Location",
+        "mutual": "6 mutual friends",
+        "initials": "S1",
+        "tone": "coral"
+      },
+      {
+        "name": "Suggested User 2",
+        "location": "Location",
+        "mutual": "7 mutual friends",
+        "initials": "S2",
+        "tone": "mint"
+      },
+      {
+        "name": "Suggested User 3",
+        "location": "Location",
+        "mutual": "8 mutual friends",
+        "initials": "S3",
+        "tone": "blue"
+      }
+    ]
+  },
+  "giftMarket": {
+    "pageTitle": "Gift Market",
+    "pageSubtitle": "Express your feelings with gifts",
+    "heading": "Gift Market",
+    "intro": "Send digital gifts to show appreciation and connect with others",
+    "categoriesAria": "Gift categories",
+    "categories": [
+      {
+        "id": "all",
+        "label": "All Gifts",
+        "prefix": ""
+      },
+      {
+        "id": "romantic",
+        "label": "Romantic",
+        "prefix": "💕 "
+      },
+      {
+        "id": "luxury",
+        "label": "Luxury",
+        "prefix": "💎 "
+      },
+      {
+        "id": "special",
+        "label": "Special",
+        "prefix": "✨ "
+      },
+      {
+        "id": "seasonal",
+        "label": "Seasonal",
+        "prefix": "🎉 "
+      }
+    ],
+    "gifts": [
+      {
+        "id": "heart",
+        "icon": "❤️",
+        "name": "Heart",
+        "description": "Send love and affection",
+        "category": "romantic"
+      },
+      {
+        "id": "rose",
+        "icon": "🌹",
+        "name": "Rose",
+        "description": "A classic symbol of romance",
+        "category": "romantic"
+      },
+      {
+        "id": "chocolate",
+        "icon": "🍫",
+        "name": "Chocolate",
+        "description": "Sweet and delightful",
+        "category": "special"
+      },
+      {
+        "id": "ring",
+        "icon": "💍",
+        "name": "Ring",
+        "description": "A precious promise",
+        "category": "luxury"
+      },
+      {
+        "id": "diamond",
+        "icon": "💎",
+        "name": "Diamond",
+        "description": "Rare and valuable",
+        "category": "luxury"
+      },
+      {
+        "id": "crown",
+        "icon": "👑",
+        "name": "Crown",
+        "description": "Treat them like royalty",
+        "category": "luxury"
+      },
+      {
+        "id": "bouquet",
+        "icon": "💐",
+        "name": "Bouquet",
+        "description": "A beautiful arrangement",
+        "category": "romantic"
+      },
+      {
+        "id": "champagne",
+        "icon": "🍾",
+        "name": "Champagne",
+        "description": "Celebrate in style",
+        "category": "seasonal"
+      },
+      {
+        "id": "star",
+        "icon": "⭐",
+        "name": "Star",
+        "description": "You're a star!",
+        "category": "special"
+      },
+      {
+        "id": "teddy",
+        "icon": "🧸",
+        "name": "Teddy Bear",
+        "description": "Cute and cuddly",
+        "category": "special"
+      },
+      {
+        "id": "cake",
+        "icon": "🎂",
+        "name": "Cake",
+        "description": "Perfect for celebrations",
+        "category": "seasonal"
+      },
+      {
+        "id": "giftbox",
+        "icon": "🎁",
+        "name": "Gift Box",
+        "description": "A mystery surprise",
+        "category": "seasonal"
+      }
+    ]
+  },
+  "giftSendModal": {
+    "title": "Send {giftName}",
+    "subtitle": "Choose a recipient and add a personal message",
+    "dialogAria": "Send {giftName}",
+    "closeAria": "Close send gift modal",
+    "sendTo": "Send to:",
+    "recipientPlaceholder": "Select recipient",
+    "messageLabel": "Message (optional):",
+    "messagePlaceholder": "Add a personal message...",
+    "submit": "Send Gift",
+    "recipients": [
+      "Sarah Ahmad",
+      "Fatima Hassan",
+      "Amira Khan",
+      "Layla Mohammed"
+    ]
+  },
+  "messages": {
+    "pageTitle": "Messages",
+    "pageSubtitle": "Connect with your matches",
+    "searchPlaceholder": "Search messages...",
+    "online": "Online",
+    "callAria": "Call {name}",
+    "videoAria": "Video call {name}",
+    "sendGift": "Send Gift",
+    "composerPlaceholder": "Type a message...",
+    "addAttachmentAria": "Add attachment",
+    "sendMessageAria": "Send message",
+    "contacts": [
+      {
+        "name": "Sarah",
+        "time": "2m ago",
+        "preview": "Thank you for the gift!",
+        "unread": "2",
+        "online": true,
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=120&q=80"
+      },
+      {
+        "name": "Ahmed",
+        "time": "1h ago",
+        "preview": "That's so kind of you!",
+        "online": true,
+        "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80"
+      },
+      {
+        "name": "Maya",
+        "time": "3h ago",
+        "preview": "Would love to connect more",
+        "unread": "1",
+        "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=120&q=80"
+      },
+      {
+        "name": "Omar",
+        "time": "1d ago",
+        "preview": "See you soon!",
+        "image": "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=120&q=80"
+      }
+    ],
+    "chatBubbles": [
+      {
+        "kind": "received",
+        "text": "Hey! Thanks for connecting 😊",
+        "time": "10:30 AM"
+      },
+      {
+        "kind": "sent",
+        "text": "Hi! Nice to meet you!",
+        "time": "10:32 AM"
+      },
+      {
+        "kind": "sent gift-message",
+        "text": "🌹",
+        "time": "10:33 AM"
+      },
+      {
+        "kind": "received",
+        "text": "Thank you for the gift! 💕",
+        "time": "10:35 AM"
+      },
+      {
+        "kind": "received compact",
+        "text": "That's so thoughtful!",
+        "time": "10:35 AM"
+      }
+    ]
+  },
+  "stories": {
+    "pageTitle": "Stories",
+    "pageSubtitle": "Share your moments",
+    "goBackAria": "Go back",
+    "heading": "Camera & Stories",
+    "intro": "Share moments that disappear in 24 hours",
+    "activeStories": "Your Active Stories",
+    "noActiveStories": "No active stories",
+    "firstMoment": "Share your first moment above!",
+    "friendsStories": "Friends Stories",
+    "friendStoryAlt": "{name}'s story",
+    "actions": [
+      {
+        "title": "Take Photo",
+        "description": "Use your camera",
+        "icon": "camera",
+        "tone": "orange"
+      },
+      {
+        "title": "Upload Photo",
+        "description": "From gallery",
+        "icon": "image",
+        "tone": "purple"
+      },
+      {
+        "title": "Upload Video",
+        "description": "Share a video",
+        "icon": "video",
+        "tone": "orange"
+      }
+    ],
+    "friendStories": [
+      {
+        "name": "Sarah",
+        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=360&q=85"
+      },
+      {
+        "name": "Ahmed",
+        "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=360&q=85"
+      },
+      {
+        "name": "Maya",
+        "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=360&q=85"
+      },
+      {
+        "name": "Omar",
+        "image": "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=360&q=85"
+      }
+    ]
+  },
+  "profile": {
+    "pageTitle": "Profile",
+    "pageSubtitle": "Your profile and settings",
+    "edit": "Edit",
+    "myProfile": "My Profile",
+    "avatarAlt": "My profile",
+    "location": "New York, USA",
+    "tags": [
+      "Travel",
+      "Art",
+      "Music"
+    ],
+    "bio": "Living life one adventure at a time ✨ Love connecting with kind souls and spreading positivity 💕",
+    "stats": [
+      {
+        "label": "Connections",
+        "value": "124",
+        "tone": "peach"
+      },
+      {
+        "label": "Gifts Sent",
+        "value": "38",
+        "tone": "purple"
+      },
+      {
+        "label": "Gifts Received",
+        "value": "5",
+        "tone": "cream"
+      }
+    ],
+    "giftsReceivedHeading": "Gifts Received",
+    "fromPrefix": "From {name}",
+    "receivedGifts": [
+      {
+        "icon": "❤️",
+        "from": "Ahmed",
+        "time": "2 hours ago"
+      },
+      {
+        "icon": "🌹",
+        "from": "Sarah",
+        "time": "5 hours ago"
+      },
+      {
+        "icon": "💎",
+        "from": "Maya",
+        "time": "1 day ago"
+      }
+    ],
+    "photosHeading": "Photos",
+    "photoAlt": "Profile photo {index}",
+    "photos": [
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=420&q=80",
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=420&q=80",
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=420&q=80",
+      "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=420&q=80",
+      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=420&q=80"
+    ],
+    "editModal": {
+      "title": "Edit Profile",
+      "closeAria": "Close edit profile",
+      "avatarAlt": "Edit profile avatar",
+      "uploadAria": "Upload profile photo",
+      "uploadHint": "Click to upload a new photo",
+      "name": "Name",
+      "nameDefault": "My Profile",
+      "age": "Age",
+      "ageDefault": "26",
+      "location": "Location",
+      "locationDefault": "New York, USA",
+      "bio": "Bio",
+      "bioDefault": "Tell us about yourself...",
+      "bioCount": "{count}/200 characters",
+      "interests": "Interests (Max 8)",
+      "addCustomPlaceholder": "Add custom interest...",
+      "addCustomAria": "Add custom interest",
+      "suggested": "Suggested:",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "initialInterests": [
+        "Travel",
+        "Art",
+        "Music"
+      ],
+      "suggestedInterests": [
+        "Photography",
+        "Sports",
+        "Reading",
+        "Cooking",
+        "Technology",
+        "Fashion",
+        "Movies",
+        "Gaming",
+        "Fitness",
+        "Dancing",
+        "Writing",
+        "Nature",
+        "Coffee"
+      ]
+    }
+  },
+  "settings": {
+    "pageTitle": "الإعدادات",
+    "pageSubtitle": "الإعدادات والخصوصية",
+    "sections": {
+      "privacy": "الخصوصية والأمان",
+      "account": "الحساب",
+      "notifications": "الإشعارات",
+      "support": "الدعم والشؤون القانونية"
+    },
+    "privacyItems": [
+      {
+        "title": "Profile Visibility",
+        "description": "Show profile to others",
+        "icon": "eye"
+      },
+      {
+        "title": "Online Status",
+        "description": "Show when you're active",
+        "icon": "globe"
+      },
+      {
+        "title": "Read Receipts",
+        "description": "Let others know you've read their messages",
+        "icon": "mail"
+      }
+    ],
+    "notificationItems": [
+      {
+        "title": "Push Notifications",
+        "description": "Receive push notifications"
+      },
+      {
+        "title": "Email Notifications",
+        "description": "Receive email updates"
+      },
+      {
+        "title": "New Messages",
+        "description": "Notify on new messages"
+      },
+      {
+        "title": "Gifts Received",
+        "description": "Notify when you receive gifts"
+      }
+    ],
+    "accountItems": [
+      {
+        "key": "email",
+        "title": "Email Address",
+        "description": "user@example.com",
+        "icon": "mail",
+        "tone": "blue"
+      },
+      {
+        "key": "phone",
+        "title": "Phone Number",
+        "description": "+1 (555) 123-4567",
+        "icon": "phone",
+        "tone": "green"
+      },
+      {
+        "key": "password",
+        "title": "Change Password",
+        "description": "Update your password",
+        "icon": "lock",
+        "tone": "purple"
+      }
+    ],
+    "supportItems": [
+      {
+        "title": "Help Center",
+        "icon": "help"
+      },
+      {
+        "title": "Terms of Service",
+        "icon": "terms"
+      },
+      {
+        "title": "Privacy Policy",
+        "icon": "privacy"
+      },
+      {
+        "title": "About Taaruf",
+        "icon": "about"
+      },
+      {
+        "title": "Language",
+        "subtitle": "العربية",
+        "icon": "language"
+      }
+    ],
+    "actions": {
+      "logout": "Log Out",
+      "deleteAccount": "Delete Account"
+    },
+    "modal": {
+      "cancel": "Cancel",
+      "email": {
+        "title": "Change Email Address",
+        "subtitle": "We'll send a verification link to your new email",
+        "actionLabel": "Send Verification",
+        "closeAria": "Close Change Email Address",
+        "fields": [
+          {
+            "label": "Current Email",
+            "type": "email",
+            "defaultValue": "user@example.com",
+            "readOnly": true
+          },
+          {
+            "label": "New Email",
+            "type": "email",
+            "placeholder": "Enter new email address"
+          },
+          {
+            "label": "Password",
+            "type": "password",
+            "placeholder": "Confirm your password"
+          }
+        ]
+      },
+      "phone": {
+        "title": "Change Phone Number",
+        "subtitle": "We'll send a verification code to your new number",
+        "actionLabel": "Send Code",
+        "closeAria": "Close Change Phone Number",
+        "fields": [
+          {
+            "label": "Current Phone",
+            "type": "text",
+            "defaultValue": "+1 (555) 123-4567",
+            "readOnly": true
+          },
+          {
+            "label": "New Phone Number",
+            "type": "tel",
+            "placeholder": "Enter new phone number"
+          }
+        ]
+      },
+      "password": {
+        "title": "Change Password",
+        "subtitle": "Enter your current password and choose a new one",
+        "actionLabel": "Update Password",
+        "closeAria": "Close Change Password",
+        "fields": [
+          {
+            "label": "Current Password",
+            "type": "password",
+            "placeholder": "Enter current password"
+          },
+          {
+            "label": "New Password",
+            "type": "password",
+            "placeholder": "Enter new password"
+          },
+          {
+            "label": "Confirm New Password",
+            "type": "password",
+            "placeholder": "Confirm new password"
+          }
+        ]
+      }
+    },
+    "languages": {
+      "en": "الإنجليزية",
+      "ar": "العربية"
+    },
+    "languageModal": {
+      "title": "اختيار اللغة",
+      "subtitle": "اختر لغة التطبيق المفضلة",
+      "closeAria": "إغلاق اختيار اللغة",
+      "english": "English",
+      "arabic": "العربية"
+    }
+  },
+  "profileView": {
+    "pageTitle": "Discover",
+    "pageSubtitle": "Find your perfect match",
+    "coverAlt": "{name} cover",
+    "addFriend": "Add Friend",
+    "message": "Message",
+    "messageAria": "Message {name}",
+    "sections": {
+      "about": "About",
+      "details": "Details",
+      "interests": "Interests",
+      "photos": "Photos"
+    },
+    "detailLabels": {
+      "occupation": "Occupation",
+      "education": "Education",
+      "memberSince": "Member Since"
+    },
+    "photoAlt": "{name} photo {index}",
+    "fallbackName": "Profile",
+    "fallbackAbout": "Open to new friendships, shared hobbies, and meaningful conversations with kind people.",
+    "fallbackInterests": [
+      "Travel",
+      "Music",
+      "Art",
+      "Reading",
+      "Fitness",
+      "Nature"
+    ],
+    "profiles": {
+      "sarah": {
+        "name": "Sarah Ahmad",
+        "location": "Dubai, UAE",
+        "status": "online",
+        "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=220&q=85",
+        "cover": "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=1800&q=80",
+        "about": "Travel enthusiast 🌍 | Coffee lover ☕ | Looking for someone who shares my passion for adventure and meaningful conversations.",
+        "occupation": "Marketing Manager",
+        "education": "Masters in Business",
+        "memberSince": "January 2024",
+        "interests": [
+          "Travel",
+          "Photography",
+          "Reading",
+          "Cooking",
+          "Yoga",
+          "Art"
+        ],
+        "photos": [
+          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=85",
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1506869640319-fe1a24fd76dc?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1516589091380-5d8e87df6999?auto=format&fit=crop&w=360&q=80",
+          "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=360&q=80"
+        ]
+      }
+    }
+  },
+  "wallet": {
+    "pageTitle": "Wallet",
+    "pageSubtitle": "Manage your earnings and points",
+    "totalBalance": "Total Balance",
+    "active": "Active",
+    "earned": "Earned",
+    "spent": "Spent",
+    "addPoints": "Add Points",
+    "withdraw": "Withdraw",
+    "minimumWithdraw": "Minimum $50 required to withdraw",
+    "transactionHistory": "Transaction History",
+    "walletActions": [
+      {
+        "icon": "card",
+        "title": "Payment Methods",
+        "subtitle": "Manage cards",
+        "tone": "blue"
+      },
+      {
+        "icon": "gift",
+        "title": "Referral Bonus",
+        "subtitle": "Earn $5",
+        "tone": "green"
+      },
+      {
+        "icon": "emoji",
+        "emoji": "👑",
+        "title": "VIP Membership",
+        "subtitle": "Go premium",
+        "tone": "purple"
+      }
+    ],
+    "transactions": [
+      {
+        "type": "up",
+        "title": "Received Diamond from Maya",
+        "date": "2024-11-06",
+        "amount": "+$10"
+      },
+      {
+        "type": "down",
+        "title": "Sent Ring to Sarah",
+        "date": "2024-11-06",
+        "amount": "-$5"
+      },
+      {
+        "type": "plus",
+        "title": "Initial bonus",
+        "date": "2024-11-05",
+        "amount": "+$20"
+      },
+      {
+        "type": "up",
+        "title": "Received Crown from Omar",
+        "date": "2024-11-04",
+        "amount": "+$8"
+      },
+      {
+        "type": "down",
+        "title": "Sent Rose to Ahmed",
+        "date": "2024-11-04",
+        "amount": "-$2"
+      }
+    ]
+  }
+}

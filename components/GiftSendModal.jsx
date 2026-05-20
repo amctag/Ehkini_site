@@ -1,8 +1,10 @@
 import { ChevronDown, X } from "lucide-react";
-
-const recipients = ["Sarah Ahmad", "Fatima Hassan", "Amira Khan", "Layla Mohammed"];
+import { useTranslations } from "next-intl";
 
 export default function GiftSendModal({ open, gift, onClose }) {
+  const t = useTranslations("giftSendModal");
+  const recipients = t.raw("recipients");
+
   if (!open || !gift) return null;
 
   return (
@@ -11,15 +13,15 @@ export default function GiftSendModal({ open, gift, onClose }) {
         className="gift-send-modal"
         role="dialog"
         aria-modal="true"
-        aria-label={`Send ${gift.name}`}
+        aria-label={t("dialogAria", { giftName: gift.name })}
         onClick={(event) => event.stopPropagation()}
       >
         <header className="gift-send-modal-header">
           <div>
-            <h3>Send {gift.name}</h3>
-            <p>Choose a recipient and add a personal message</p>
+            <h3>{t("title", { giftName: gift.name })}</h3>
+            <p>{t("subtitle")}</p>
           </div>
-          <button type="button" aria-label="Close send gift modal" onClick={onClose}>
+          <button type="button" aria-label={t("closeAria")} onClick={onClose}>
             <X size={17} />
           </button>
         </header>
@@ -31,11 +33,11 @@ export default function GiftSendModal({ open, gift, onClose }) {
           </div>
 
           <label className="gift-send-field">
-            <span>Send to:</span>
+            <span>{t("sendTo")}</span>
             <div className="gift-select-wrap">
               <select defaultValue="">
                 <option value="" disabled>
-                  Select recipient
+                  {t("recipientPlaceholder")}
                 </option>
                 {recipients.map((recipient) => (
                   <option value={recipient} key={recipient}>
@@ -48,14 +50,14 @@ export default function GiftSendModal({ open, gift, onClose }) {
           </label>
 
           <label className="gift-send-field">
-            <span>Message (optional):</span>
-            <textarea placeholder="Add a personal message..." rows={4} />
+            <span>{t("messageLabel")}</span>
+            <textarea placeholder={t("messagePlaceholder")} rows={4} />
           </label>
         </div>
 
         <footer className="gift-send-modal-footer">
           <button type="button" onClick={onClose}>
-            Send Gift
+            {t("submit")}
           </button>
         </footer>
       </section>

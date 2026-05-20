@@ -1,28 +1,13 @@
 import { Gift, MessageCircle, MoreVertical, Phone, Search, UserPlus, Users, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import DashboardShell from "./DashboardShell";
-
-const friendImage =
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=180&q=80";
-
-const friends = Array.from({ length: 6 }, (_, index) => ({
-  id: index + 1,
-  name: "Sarah Ahmad",
-  location: "Dubai, UAE",
-  status: "Active now",
-  mutual: "12 mutual friends",
-  connected: "Connected 2 months ago",
-  image: friendImage
-}));
-
-const suggestions = [
-  { name: "Suggested User 1", location: "Location", mutual: "6 mutual friends", initials: "S1", tone: "coral" },
-  { name: "Suggested User 2", location: "Location", mutual: "7 mutual friends", initials: "S2", tone: "mint" },
-  { name: "Suggested User 3", location: "Location", mutual: "8 mutual friends", initials: "S3", tone: "blue" }
-];
+import SectionTitle from "./SectionTitle";
 
 function FriendCard({ friend }) {
+  const t = useTranslations("friends");
+
   return (
     <article className="friend-card">
       <div className="friend-card-header">
@@ -37,7 +22,7 @@ function FriendCard({ friend }) {
           <small>{friend.status}</small>
         </div>
 
-        <button className="friend-menu" type="button" aria-label={`More options for ${friend.name}`}>
+        <button className="friend-menu" type="button" aria-label={t("friend.moreOptionsAria", { name: friend.name })}>
           <MoreVertical size={20} />
         </button>
       </div>
@@ -48,17 +33,17 @@ function FriendCard({ friend }) {
       </div>
 
       <div className="friend-actions">
-        <Link className="message-friend" href="/messages" aria-label={`Message ${friend.name}`}>
+        <Link className="message-friend" href="/messages" aria-label={t("friend.messageAria", { name: friend.name })}>
           <MessageCircle size={17} />
-          Message
+          {t("friend.message")}
         </Link>
-        <button className="call-friend" type="button" aria-label={`Call ${friend.name}`}>
+        <button className="call-friend" type="button" aria-label={t("friend.callAria", { name: friend.name })}>
           <Phone size={17} />
         </button>
-        <button className="video-friend" type="button" aria-label={`Video call ${friend.name}`}>
+        <button className="video-friend" type="button" aria-label={t("friend.videoAria", { name: friend.name })}>
           <Video size={17} />
         </button>
-        <button className="gift-friend" type="button" aria-label={`Send gift to ${friend.name}`}>
+        <button className="gift-friend" type="button" aria-label={t("friend.giftAria", { name: friend.name })}>
           <Gift size={17} />
         </button>
       </div>
@@ -67,6 +52,8 @@ function FriendCard({ friend }) {
 }
 
 function SuggestedFriendCard({ suggestion }) {
+  const t = useTranslations("friends");
+
   return (
     <article className="suggested-card">
       <div className={`suggested-avatar ${suggestion.tone}`}>{suggestion.initials}</div>
@@ -77,34 +64,35 @@ function SuggestedFriendCard({ suggestion }) {
       </div>
       <button type="button">
         <UserPlus size={16} />
-        Add Friend
+        {t("addFriend")}
       </button>
     </article>
   );
 }
 
 export default function FriendsPage() {
+  const t = useTranslations("friends");
+  const friends = t.raw("friendsList");
+  const suggestions = t.raw("suggestions");
+
   return (
-    <DashboardShell activePage="Friends" title="Friends" subtitle="Manage your connections">
+    <DashboardShell activePageKey="friends" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="friends-page">
         <div className="friends-toolbar">
           <div className="friends-title-row">
-            <h2>
-              <Users size={24} />
-              My Friends
-            </h2>
-            <span>6 Friends</span>
+            <SectionTitle icon={Users} iconProps={{ size: 24 }} title={t("myFriends")} />
+            <span>{t("friendsCount")}</span>
           </div>
 
           <label className="friends-search">
             <Search size={18} />
-            <input type="search" placeholder="Search friends..." />
+            <input type="search" placeholder={t("searchPlaceholder")} />
           </label>
 
           <div className="friends-filters">
-            <button type="button">Online Only</button>
-            <button type="button">Recent</button>
-            <button type="button">A-Z</button>
+            <button type="button">{t("filters.onlineOnly")}</button>
+            <button type="button">{t("filters.recent")}</button>
+            <button type="button">{t("filters.alphabetical")}</button>
           </div>
         </div>
 
@@ -114,7 +102,7 @@ export default function FriendsPage() {
           ))}
         </div>
 
-        <h2 className="suggested-heading">Suggested Friends</h2>
+        <h2 className="suggested-heading">{t("suggestedHeading")}</h2>
         <div className="suggested-grid">
           {suggestions.map((suggestion) => (
             <SuggestedFriendCard suggestion={suggestion} key={suggestion.name} />

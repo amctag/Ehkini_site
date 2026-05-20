@@ -1,5 +1,5 @@
-import WalletPage from "@/components/WalletPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <WalletPage />;
+  redirect("/discover");
 }

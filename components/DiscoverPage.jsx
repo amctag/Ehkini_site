@@ -1,5 +1,8 @@
+"use client";
+
 import { Filter, Heart, Search, Sparkles } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import DashboardShell from "./DashboardShell";
 
 const storyItems = [
@@ -61,10 +64,48 @@ const people = [
     tags: ["Technology", "Hiking", "+1"],
     image:
       "https://images.unsplash.com/photo-1542327897-d73f4005b533?auto=format&fit=crop&w=720&q=85"
+  },
+  {
+    name: "Layla",
+    age: 27,
+    distance: "4 km away",
+    bio: "Interior designer who enjoys galleries, coffee, and weekend road trips",
+    tags: ["Design", "Coffee", "+1"],
+    image:
+      "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=720&q=85"
+  },
+  {
+    name: "Kareem",
+    age: 30,
+    distance: "7 km away",
+    bio: "Fitness coach, foodie, and fan of spontaneous adventures",
+    tags: ["Fitness", "Food", "+1"],
+    image:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=720&q=85"
+  },
+  {
+    name: "Nour",
+    age: 25,
+    distance: "10 km away",
+    bio: "Book lover and musician looking for meaningful conversations",
+    tags: ["Books", "Music", "+1"],
+    image:
+      "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=720&q=85"
+  },
+  {
+    name: "Samir",
+    age: 33,
+    distance: "14 km away",
+    bio: "Photographer who spends free time hiking and exploring new places",
+    tags: ["Photography", "Travel", "+1"],
+    image:
+      "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=720&q=85"
   }
 ];
 
 function Stories() {
+  const router = useRouter();
+
   return (
     <section className="discover-section">
       <h2>
@@ -74,7 +115,12 @@ function Stories() {
 
       <div className="stories-row">
         <div className="story-item">
-          <button className="your-story" type="button" aria-label="Add your story">
+          <button
+            className="your-story"
+            type="button"
+            aria-label="Go to stories page"
+            onClick={() => router.push("/stories")}
+          >
             +
           </button>
           <span>Your Story</span>
@@ -98,8 +144,12 @@ function Stories() {
 }
 
 function ProfileCard({ person }) {
+  const router = useRouter();
+
+  const slug = person.name.toLowerCase().replace(/\s+/g, "-");
+
   return (
-    <article className="profile-card">
+    <button type="button" className="profile-card profile-card-button" onClick={() => router.push(`/profile-view/${slug}`)}>
       <Image
         className="profile-image"
         src={person.image}
@@ -120,7 +170,7 @@ function ProfileCard({ person }) {
           ))}
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 

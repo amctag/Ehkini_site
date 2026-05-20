@@ -4,10 +4,10 @@ import {
   Home,
   LogOut,
   MessageCircle,
+  Search,
   Settings,
   User,
-  Users,
-  Wallet
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import AppLogo from "./AppLogo";
@@ -18,8 +18,7 @@ const navItems = [
   { label: "Stories", href: "/stories", icon: Camera },
   { label: "Messages", href: "/messages", icon: MessageCircle, badge: "3" },
   { label: "Friends", href: "/friends", icon: Users },
-  { label: "Profile", href: "/profile", icon: User },
-  { label: "Wallet", href: "/wallet", icon: Wallet }
+  { label: "Profile", href: "/profile", icon: User }
 ];
 
 export default function Sidebar({ activePage }) {
@@ -29,13 +28,9 @@ export default function Sidebar({ activePage }) {
         <AppLogo />
       </div>
 
-      <div className="balance-card">
-        <div>
-          <span>Your Balance</span>
-          <strong>$20</strong>
-        </div>
-        <span className="balance-crown">+</span>
-        <button type="button">Manage Wallet</button>
+      <div className="sidebar-search" role="search">
+        <Search size={17} />
+        <input type="search" placeholder="Search" aria-label="Search sidebar" />
       </div>
 
       <nav className="side-nav" aria-label="Main navigation">
@@ -51,10 +46,10 @@ export default function Sidebar({ activePage }) {
       </nav>
 
       <div className="sidebar-footer">
-        <a href="#">
+        <Link className={activePage === "Settings" ? "active" : ""} href="/settings">
           <Settings size={17} />
           Settings
-        </a>
+        </Link>
         <Link className="logout-link" href="/">
           <LogOut size={17} />
           Logout

@@ -1,24 +1,105 @@
+"use client";
+
 import { Gift } from "lucide-react";
+import { useMemo, useState } from "react";
 import DashboardShell from "./DashboardShell";
+import GiftCard from "./GiftCard";
+import GiftSendModal from "./GiftSendModal";
 
 const categories = ["All Gifts", "Romantic", "Luxury", "Special", "Seasonal"];
 
 const gifts = [
-  { icon: "❤️", name: "Heart", description: "Send love and affection", price: "$1" },
-  { icon: "🌹", name: "Rose", description: "A classic symbol of romance", price: "$2" },
-  { icon: "🍫", name: "Chocolate", description: "Sweet and delightful", price: "$2" },
-  { icon: "💍", name: "Ring", description: "A precious promise", price: "$5" },
-  { icon: "💎", name: "Diamond", description: "Rare and valuable", price: "$10" },
-  { icon: "👑", name: "Crown", description: "Treat them like royalty", price: "$8" },
-  { icon: "💐", name: "Bouquet", description: "A beautiful arrangement", price: "$4" },
-  { icon: "🍾", name: "Champagne", description: "Celebrate in style", price: "$6" },
-  { icon: "⭐", name: "Star", description: "You're a star!", price: "$3" },
-  { icon: "🧸", name: "Teddy Bear", description: "Cute and cuddly", price: "$3" },
-  { icon: "🎂", name: "Cake", description: "Perfect for celebrations", price: "$4" },
-  { icon: "🎁", name: "Gift Box", description: "A mystery surprise", price: "$7" }
+  {
+    icon: "\u2764\uFE0F",
+    name: "Heart",
+    description: "Send love and affection",
+    category: "Romantic"
+  },
+  {
+    icon: "\uD83C\uDF39",
+    name: "Rose",
+    description: "A classic symbol of romance",
+    category: "Romantic"
+  },
+  {
+    icon: "\uD83C\uDF6B",
+    name: "Chocolate",
+    description: "Sweet and delightful",
+    category: "Special"
+  },
+  {
+    icon: "\uD83D\uDC8D",
+    name: "Ring",
+    description: "A precious promise",
+    category: "Luxury"
+  },
+  {
+    icon: "\uD83D\uDC8E",
+    name: "Diamond",
+    description: "Rare and valuable",
+    category: "Luxury"
+  },
+  {
+    icon: "\uD83D\uDC51",
+    name: "Crown",
+    description: "Treat them like royalty",
+    category: "Luxury"
+  },
+  {
+    icon: "\uD83D\uDC90",
+    name: "Bouquet",
+    description: "A beautiful arrangement",
+    category: "Romantic"
+  },
+  {
+    icon: "\uD83C\uDF7E",
+    name: "Champagne",
+    description: "Celebrate in style",
+    category: "Seasonal"
+  },
+  {
+    icon: "\u2B50",
+    name: "Star",
+    description: "You're a star!",
+    category: "Special"
+  },
+  {
+    icon: "\uD83E\uDDF8",
+    name: "Teddy Bear",
+    description: "Cute and cuddly",
+    category: "Special"
+  },
+  {
+    icon: "\uD83C\uDF82",
+    name: "Cake",
+    description: "Perfect for celebrations",
+    category: "Seasonal"
+  },
+  {
+    icon: "\uD83C\uDF81",
+    name: "Gift Box",
+    description: "A mystery surprise",
+    category: "Seasonal"
+  }
 ];
 
+function getCategoryPrefix(category) {
+  if (category === "Romantic") return "\uD83D\uDC95 ";
+  if (category === "Luxury") return "\uD83D\uDC8E ";
+  if (category === "Special") return "\u2728 ";
+  if (category === "Seasonal") return "\uD83C\uDF89 ";
+  return "";
+}
+
 export default function GiftMarketPage() {
+  const [activeCategory, setActiveCategory] = useState("All Gifts");
+  const [selectedGift, setSelectedGift] = useState(null);
+
+  const visibleGifts = useMemo(() => {
+    if (activeCategory === "All Gifts") return gifts;
+    return gifts.filter((gift) => gift.category === activeCategory);
+  }, [activeCategory]);
+
   return (
     <DashboardShell activePage="Gift Market" title="Gift Market" subtitle="Express your feelings with gifts">
       <section className="gift-market">
@@ -31,30 +112,27 @@ export default function GiftMarketPage() {
         </div>
 
         <div className="gift-categories" aria-label="Gift categories">
-          {categories.map((category, index) => (
-            <button className={index === 0 ? "active" : ""} type="button" key={category}>
-              {category === "Romantic" ? "💕 " : ""}
-              {category === "Luxury" ? "💎 " : ""}
-              {category === "Special" ? "✨ " : ""}
-              {category === "Seasonal" ? "🎉 " : ""}
+          {categories.map((category) => (
+            <button
+              className={category === activeCategory ? "active" : ""}
+              type="button"
+              key={category}
+              onClick={() => setActiveCategory(category)}
+            >
+              {getCategoryPrefix(category)}
               {category}
             </button>
           ))}
         </div>
 
         <div className="gift-grid">
-          {gifts.map((gift) => (
-            <article className="gift-card" key={gift.name}>
-              <div className="gift-icon" aria-hidden="true">
-                {gift.icon}
-              </div>
-              <h3>{gift.name}</h3>
-              <p>{gift.description}</p>
-              <span>{gift.price}</span>
-            </article>
+          {visibleGifts.map((gift) => (
+            <GiftCard key={gift.name} gift={gift} onClick={setSelectedGift} />
           ))}
         </div>
       </section>
+
+      <GiftSendModal open={Boolean(selectedGift)} gift={selectedGift} onClose={() => setSelectedGift(null)} />
     </DashboardShell>
   );
 }

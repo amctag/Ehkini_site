@@ -1,5 +1,6 @@
 import { Gift, MessageCircle, MoreVertical, Phone, Search, UserPlus, Users, Video } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import DashboardShell from "./DashboardShell";
 
 const friendImage =
@@ -47,10 +48,10 @@ function FriendCard({ friend }) {
       </div>
 
       <div className="friend-actions">
-        <button className="message-friend" type="button">
+        <Link className="message-friend" href="/messages" aria-label={`Message ${friend.name}`}>
           <MessageCircle size={17} />
           Message
-        </button>
+        </Link>
         <button className="call-friend" type="button" aria-label={`Call ${friend.name}`}>
           <Phone size={17} />
         </button>

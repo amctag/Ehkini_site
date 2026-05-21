@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { api } from "@/store/api";
+import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
+import { api } from "@/src/services/baseApi";
 import {
   selectAuthStatus,
   selectCurrentUser,
   setAuthLoading
-} from "@/store/authSlice";
+} from "@/src/features/auth/authSlice";
 
 export default function AuthBootstrap() {
   const dispatch = useAppDispatch();

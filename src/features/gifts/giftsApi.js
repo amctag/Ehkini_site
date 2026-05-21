@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "@/src/services/baseApi";
 
 export const giftsApi = api.injectEndpoints({
   endpoints: (builder) => ({

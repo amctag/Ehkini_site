@@ -1,5 +1,5 @@
 import { getMockResponse } from "@/mocks/handlers";
-import { clearAuth } from "./authSlice";
+import { clearAuth } from "@/src/features/auth/authSlice";
 
 /** RTK Query baseQuery that serves @/mocks/data instead of the network */
 export async function mockBaseQuery(args, api, extraOptions) {

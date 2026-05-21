@@ -1,7 +1,7 @@
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
-import StoreProvider from "@/components/providers/StoreProvider";
+import ReduxProvider from "@/src/providers/ReduxProvider";
 
 export async function generateMetadata() {
   const t = await getTranslations("metadata");
@@ -20,7 +20,7 @@ export default async function RootLayout({ children }) {
     <html lang={locale} dir={direction}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <StoreProvider>{children}</StoreProvider>
+          <ReduxProvider>{children}</ReduxProvider>
         </NextIntlClientProvider>
       </body>
     </html>

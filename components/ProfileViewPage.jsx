@@ -14,7 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { mockProfilesBySlug } from "@/mocks/data/profiles/by-slug";
-import { useGetProfileBySlugQuery } from "@/store/profilesApi";
+import { useGetProfileBySlugQuery } from "@/src/features/profiles/profilesApi";
 import DashboardShell from "./DashboardShell";
 
 function buildFallbackProfile(slug, defaults, fallbackName) {

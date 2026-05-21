@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   useGetDiscoverPeopleQuery,
   useGetDiscoverStoriesQuery
-} from "@/store/discoverApi";
+} from "@/src/features/discover/discoverApi";
 import DashboardShell from "./DashboardShell";
 import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";

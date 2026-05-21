@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "@/src/services/baseApi";
 import { mapUsersResponse } from "./discoverMappers";
 
 export const discoverApi = api.injectEndpoints({

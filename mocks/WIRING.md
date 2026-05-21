@@ -17,8 +17,8 @@ Demo login password (when you wire `LoginCard`): **`demo`** (any identifier).
 ```
 Page component
   → RTK hook (e.g. useGetDiscoverPeopleQuery)
-    → store/discoverApi.js (endpoint URL)
-      → store/api.js (baseQuery: mock OR fetch)
+    → src/features/discover/discoverApi.js (endpoint URL)
+      → src/services/baseApi.js (baseQuery: mock OR fetch)
         → mocks/handlers/*.js (match URL → return data)
           → mocks/data/*.js (JSON-shaped payloads)
 ```
@@ -35,11 +35,11 @@ Side effects:
 
 | Layer | File | Role |
 |-------|------|------|
-| Trigger | `components/providers/AuthBootstrap.jsx` | On load: `api.endpoints.getMe.initiate()` |
-| Endpoint | `store/authApi.js` | `query: () => "/auth/me"` |
+| Trigger | `src/providers/AuthBootstrap.jsx` | On load: `api.endpoints.getMe.initiate()` |
+| Endpoint | `src/features/auth/authApi.js` | `query: () => "/auth/me"` |
 | Handler | `mocks/handlers/auth.js` | Returns `mockCurrentUser` |
 | Data | `mocks/data/auth/user.js` | User object |
-| UI state | `store/listenerMiddleware.js` | `setUser(payload)` on success |
+| UI state | `src/app/listenerMiddleware.js` | `setUser(payload)` on success |
 
 **Check:** Redux DevTools → `auth` slice has `user` after ~200ms.
 
@@ -151,6 +151,7 @@ Wire in `SettingsPage.jsx` `BlockedUsersModal`.
 
 1. Add payload in `mocks/data/...`
 2. Add route in `mocks/handlers/....js` and register in `handlers/index.js`
-3. Add `injectEndpoints` in `store/xxxApi.js`
-4. `import "./xxxApi"` in `store/store.js`
+3. Add `injectEndpoints` in `src/features/<feature>/<feature>Api.js`
+4. `import "./xxxApi"` in `src/app/store.js`
 5. Use the generated hook in a component
+

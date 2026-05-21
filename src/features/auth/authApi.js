@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "@/src/services/baseApi";
 import { setAuthError } from "./authSlice";
 
 export const authApi = api.injectEndpoints({

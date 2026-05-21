@@ -1,12 +1,20 @@
 import { api } from "@/src/services/baseApi";
-import { setAuthError } from "./authSlice";
+import { clearAuth, setAuthError, setUser } from "./authSlice";
 import { mapCountriesResponse } from "./countriesMappers";
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMe: builder.query({
       query: () => "me",
-      providesTags: ["User"]
+      providesTags: ["User"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setUser(data));
+        } catch {
+          dispatch(clearAuth());
+        }
+      }
     }),
     getCountries: builder.query({
       query: () => "countries",

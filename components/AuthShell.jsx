@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import BrandMark from "./BrandMark";
+import BrandMarkW from "./BrandMarkW";
 
 export default function AuthShell({ children, label }) {
   const t = useTranslations("authShell");
@@ -9,7 +9,7 @@ export default function AuthShell({ children, label }) {
     <main className="auth-page">
       <section className="auth-shell" aria-label={ariaLabel}>
         <div className="brand">
-          <BrandMark />
+          <BrandMarkW />
           <h1>{t("brandTitle")}</h1>
           <p>{t("brandSubtitle")}</p>
         </div>

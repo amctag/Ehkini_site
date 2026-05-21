@@ -4,7 +4,7 @@
     "description": "E7kini login"
   },
   "appLogo": {
-    "name": "Ehkini",
+    "name": "E7kini",
     "ariaLabel": "E7kini"
   },
   "authShell": {
@@ -804,13 +804,6 @@
     ],
     "accountItems": [
       {
-        "key": "email",
-        "title": "Email Address",
-        "description": "user@example.com",
-        "icon": "mail",
-        "tone": "blue"
-      },
-      {
         "key": "phone",
         "title": "Phone Number",
         "description": "+1 (555) 123-4567",
@@ -823,29 +816,42 @@
         "description": "Update your password",
         "icon": "lock",
         "tone": "purple"
+      },
+      {
+        "key": "language",
+        "title": "Language",
+        "description": "English",
+        "icon": "language",
+        "tone": "blue"
+      },
+      {
+        "key": "blocked",
+        "title": "Blocked Users",
+        "description": "Manage blocked users",
+        "icon": "blocked",
+        "tone": "peach"
       }
     ],
     "supportItems": [
       {
+        "key": "help",
         "title": "Help Center",
         "icon": "help"
       },
       {
+        "key": "terms",
         "title": "Terms of Service",
         "icon": "terms"
       },
       {
+        "key": "privacy",
         "title": "Privacy Policy",
         "icon": "privacy"
       },
       {
-        "title": "About Taaruf",
+        "key": "about",
+        "title": "About Ehkini",
         "icon": "about"
-      },
-      {
-        "title": "Language",
-        "subtitle": "English",
-        "icon": "language"
       }
     ],
     "actions": {
@@ -931,6 +937,44 @@
       "closeAria": "Close language selector",
       "english": "English",
       "arabic": "Arabic"
+    },
+    "supportContent": {
+      "help": {
+        "title": "Help Center",
+        "body": "If you run into any issue, contact support through the Help Center. We can assist with account recovery, technical issues, and abuse reports."
+      },
+      "terms": {
+        "title": "Terms of Service",
+        "body": "By using the app, you agree to follow community rules, avoid misuse, and respect other users privacy."
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "body": "We protect your personal data and use it only to improve your in-app experience. You can request data deletion from settings."
+      },
+      "about": {
+        "title": "About Ehkini",
+        "body": "Ehkini is a social platform designed to help people build meaningful connections through messages, stories, and shared interests."
+      }
+    },
+    "supportModal": {
+      "closeAria": "Close"
+    },
+    "blockedUsersModal": {
+      "title": "Blocked Users",
+      "subtitle": "People you have blocked",
+      "empty": "You have no blocked users right now.",
+      "close": "Close",
+      "unblock": "Unblock",
+      "users": [
+        {
+          "name": "Sarah Ahmad",
+          "reason": "Unwanted content"
+        },
+        {
+          "name": "Omar Ali",
+          "reason": "Abusive behavior"
+        }
+      ]
     }
   },
   "profileView": {

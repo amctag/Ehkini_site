@@ -7,7 +7,7 @@ export default function AppLogo() {
   return (
     <div className="app-logo" aria-label={t("ariaLabel")}>
       <BrandMark />
-      <span className="app-logo-label">{t("name")}</span>
+      <span className="app-logo-label ">{t("name")}</span>
     </div>
   );
 }

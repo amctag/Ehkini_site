@@ -111,9 +111,7 @@ function Topbar({ title, subtitle, notificationCount }) {
   return (
     <>
       <header className="discover-topbar">
-        <button className="mobile-menu" type="button" aria-label={t("mobileMenuAria")}>
-          <Menu size={22} />
-        </button>
+        
         <div>
           <h1>{title}</h1>
           <p>{subtitle}</p>

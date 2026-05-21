@@ -91,7 +91,7 @@ function NotificationsPopup({ open, onClose }) {
   );
 }
 
-function Topbar({ title, subtitle, notificationCount }) {
+function Topbar({ title, subtitle, notificationCount, onOpenMobileSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const t = useTranslations("dashboard");
 
@@ -111,7 +111,9 @@ function Topbar({ title, subtitle, notificationCount }) {
   return (
     <>
       <header className="discover-topbar">
-        
+        <button className="mobile-menu" type="button" aria-label={t("mobileMenuAria")} onClick={onOpenMobileSidebar}>
+          <Menu size={22} />
+        </button>
         <div>
           <h1>{title}</h1>
           <p>{subtitle}</p>
@@ -120,7 +122,7 @@ function Topbar({ title, subtitle, notificationCount }) {
         <div className="topbar-actions">
           <Link href="/messages" className="topbar-inbox-button" aria-label={t("inboxAria")}>
             <Inbox size={20} />
-            {t("inbox")}
+            <span className="topbar-inbox-label">{t("inbox")}</span>
           </Link>
           <button
             type="button"
@@ -148,12 +150,30 @@ function Topbar({ title, subtitle, notificationCount }) {
 
 export default function DashboardShell({ activePageKey, title, subtitle, children }) {
   const t = useTranslations("dashboard");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
     <main className="discover-app">
-      <Sidebar activePageKey={activePageKey} />
+      {isMobileSidebarOpen ? (
+        <button
+          type="button"
+          className="mobile-sidebar-overlay"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          aria-label={t("mobileMenuAria")}
+        />
+      ) : null}
+      <Sidebar
+        activePageKey={activePageKey}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+      />
       <div className="discover-main">
-        <Topbar title={title} subtitle={subtitle} notificationCount={t("notificationCount")} />
+        <Topbar
+          title={title}
+          subtitle={subtitle}
+          notificationCount={t("notificationCount")}
+          onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        />
         <div className="discover-content">{children}</div>
       </div>
     </main>

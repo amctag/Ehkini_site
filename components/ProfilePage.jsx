@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Edit, Gift, Images, MapPin, Plus, X } from "lucide-react";
+import { Camera, Edit, Images, MapPin, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -156,7 +156,6 @@ function EditProfileModal({ open, onClose }) {
 export default function ProfilePage() {
   const t = useTranslations("profile");
   const stats = t.raw("stats");
-  const gifts = t.raw("receivedGifts");
   const photos = t.raw("photos");
   const tags = t.raw("tags");
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -198,27 +197,6 @@ export default function ProfilePage() {
               <div className={stat.tone} key={stat.label}>
                 <span>{stat.label}</span>
                 <strong>{stat.value}</strong>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="received-gifts-panel">
-          <div className="received-gifts-head">
-            <h2>
-              <Gift size={20} />
-              {t("giftsReceivedHeading")}
-            </h2>
-          </div>
-
-          <div className="received-gifts-list">
-            {gifts.map((gift) => (
-              <div className="received-gift" key={`${gift.from}-${gift.time}`}>
-                <span className="received-gift-icon">{gift.icon}</span>
-                <div>
-                  <strong>{t("fromPrefix", { name: gift.from })}</strong>
-                  <small>{gift.time}</small>
-                </div>
               </div>
             ))}
           </div>

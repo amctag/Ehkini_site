@@ -297,7 +297,16 @@
         ],
         "image": "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=720&q=85"
       }
-    ]
+    ],
+    "storyViewer": {
+      "dialogAria": "???? ?????",
+      "openAria": "??? ??? {name}",
+      "closeAria": "????? ???? ?????",
+      "previousAria": "????? ???????",
+      "nextAria": "????? ???????",
+      "count": "{current} / {total}",
+      "view": "???"
+    }
   },
   "friends": {
     "pageTitle": "Friends",
@@ -548,6 +557,8 @@
     "composerPlaceholder": "Type a message...",
     "addAttachmentAria": "Add attachment",
     "sendMessageAria": "Send message",
+    "backToList": "Back",
+    "backToListAria": "Back to conversations",
     "contacts": [
       {
         "name": "Sarah",

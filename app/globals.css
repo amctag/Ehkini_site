@@ -1259,6 +1259,14 @@ a {
   gap: 11px;
 }
 
+.auth-error-text {
+  margin: 10px 0 0;
+  color: #dc2626;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .people-tools button {
   gap: 9px;
   min-width: 94px;
@@ -1268,6 +1276,72 @@ a {
   color: #1f2937;
   background: #fff;
   font-size: 14px;
+}
+
+.people-search-field {
+  min-width: 230px;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid #dedee4;
+  border-radius: 8px;
+  color: #6b7280;
+  background: #fff;
+}
+
+.people-search-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #111827;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+}
+
+.people-filter-wrap {
+  position: relative;
+}
+
+.people-filter-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 12;
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.15);
+}
+
+.people-filter-menu button {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #374151;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.people-filter-menu button.active {
+  color: #111827;
+  background: #fff0e7;
+}
+
+[dir="rtl"] .people-filter-menu {
+  left: 0;
+  right: auto;
 }
 
 .people-grid {
@@ -1292,6 +1366,73 @@ a {
   padding: 0;
   text-align: start;
   cursor: pointer;
+}
+
+.people-skeleton-card {
+  background: #e8edf5;
+}
+
+.people-skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, #dfe5ee 18%, #f3f6fb 42%, #dfe5ee 64%);
+  background-size: 220% 100%;
+  animation: peopleSkeletonPulse 1.35s linear infinite;
+}
+
+.people-skeleton-content {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.people-skeleton-line {
+  height: 10px;
+  display: block;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.people-skeleton-line-lg {
+  width: 62%;
+  height: 16px;
+}
+
+.people-skeleton-line-md {
+  width: 80%;
+}
+
+.people-skeleton-line-sm {
+  width: 34%;
+}
+
+.people-skeleton-line-xs {
+  width: 56%;
+}
+
+.people-skeleton-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.people-skeleton-tags span {
+  width: 54px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+@keyframes peopleSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .profile-image {
@@ -3948,10 +4089,29 @@ a {
 
   .people-tools {
     width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .people-tools button {
     flex: 1;
+  }
+
+  .people-search-field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .people-filter-wrap > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .people-filter-menu {
+    left: 0;
+    right: 0;
+    min-width: 0;
   }
 
   .people-grid {

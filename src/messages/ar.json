@@ -19,11 +19,16 @@
   "loginCard": {
     "title": "مرحباً بعودتك",
     "subtitle": "سجل الدخول إلى حسابك",
+    "countryCodeLabel": "Country Code",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
     "identifierLabel": "البريد الإلكتروني أو الهاتف",
     "identifierPlaceholder": "أدخل بريدك الإلكتروني أو رقم هاتفك",
     "passwordLabel": "كلمة المرور",
     "passwordPlaceholder": "أدخل كلمة المرور",
     "forgotPassword": "هل نسيت كلمة المرور؟",
+    "loggingInButton": "Logging in...",
+    "loginFailed": "Login failed",
     "loginButton": "تسجيل الدخول",
     "noAccount": "ليس لديك حساب؟",
     "signupLink": "إنشاء حساب"
@@ -183,7 +188,15 @@
     "peopleError": "تعذر تحميل الأشخاص. حاول مرة أخرى.",
     "peopleEmpty": "لا يوجد أشخاص للعرض حالياً.",
     "search": "Search",
+    "searchPlaceholder": "Search by name, bio, or interests",
     "filters": "Filters",
+    "filterOptions": {
+      "all": "All users",
+      "age18to25": "Age 18-25",
+      "age26to30": "Age 26-30",
+      "age31Plus": "Age 31+",
+      "nearby": "Nearby (<= 10 km)"
+    },
     "storyImageAlt": "{name}'s story",
     "storyItems": [
       {
@@ -1122,3 +1135,5 @@
     ]
   }
 }
+
+

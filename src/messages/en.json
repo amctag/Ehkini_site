@@ -19,11 +19,16 @@
   "loginCard": {
     "title": "Welcome Back",
     "subtitle": "Log in to your account",
+    "countryCodeLabel": "Country Code",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
     "identifierLabel": "Email or Phone",
     "identifierPlaceholder": "Enter your email or phone",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
     "forgotPassword": "Forgot Password?",
+    "loggingInButton": "Logging in...",
+    "loginFailed": "Login failed",
     "loginButton": "Login",
     "noAccount": "Don't have an account?",
     "signupLink": "Sign Up"
@@ -183,7 +188,15 @@
     "peopleError": "Could not load people. Please try again.",
     "peopleEmpty": "No people to show right now.",
     "search": "Search",
+    "searchPlaceholder": "Search by name, bio, or interests",
     "filters": "Filters",
+    "filterOptions": {
+      "all": "All users",
+      "age18to25": "Age 18-25",
+      "age26to30": "Age 26-30",
+      "age31Plus": "Age 31+",
+      "nearby": "Nearby (<= 10 km)"
+    },
     "storyImageAlt": "{name}'s story",
     "storyItems": [
       {

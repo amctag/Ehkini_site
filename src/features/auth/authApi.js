@@ -1,15 +1,20 @@
 import { api } from "@/src/services/baseApi";
 import { setAuthError } from "./authSlice";
+import { mapCountriesResponse } from "./countriesMappers";
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMe: builder.query({
-      query: () => "/auth/me",
+      query: () => "me",
       providesTags: ["User"]
+    }),
+    getCountries: builder.query({
+      query: () => "countries",
+      transformResponse: mapCountriesResponse
     }),
     login: builder.mutation({
       query: (body) => ({
-        url: "/auth/login",
+        url: "login",
         method: "POST",
         body
       }),
@@ -28,14 +33,14 @@ export const authApi = api.injectEndpoints({
     }),
     register: builder.mutation({
       query: (body) => ({
-        url: "/auth/register",
+        url: "register",
         method: "POST",
         body
       })
     }),
     logout: builder.mutation({
       query: () => ({
-        url: "/auth/logout",
+        url: "logout",
         method: "POST"
       }),
       invalidatesTags: ["User"]
@@ -45,6 +50,7 @@ export const authApi = api.injectEndpoints({
 
 export const {
   useGetMeQuery,
+  useGetCountriesQuery,
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation

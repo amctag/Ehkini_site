@@ -7,8 +7,20 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com"
+      },
+      {
+        protocol: "https",
+        hostname: "amcserver.com"
       }
     ]
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://amcserver.com/app/taaruf/public/api/v2/:path*"
+      }
+    ];
   }
 };
 

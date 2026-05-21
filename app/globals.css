@@ -1302,6 +1302,21 @@ a {
   object-fit: cover;
 }
 
+.profile-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f9fafb 0%, #e5e7eb 32%, #9ca3af 62%, #374151 100%);
+}
+
+.profile-avatar-placeholder-icon {
+  width: 38%;
+  max-width: 168px;
+  min-width: 88px;
+  height: auto;
+  fill: #6b7280;
+}
+
 .profile-overlay {
   position: absolute;
   inset: 0;

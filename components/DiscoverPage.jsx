@@ -10,6 +10,7 @@ import {
   useGetDiscoverStoriesQuery
 } from "@/store/discoverApi";
 import DashboardShell from "./DashboardShell";
+import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";
 
 function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
@@ -206,17 +207,23 @@ function Stories() {
 function ProfileCard({ person }) {
   const router = useRouter();
 
-  const slug = person.slug ?? person.name.toLowerCase().replace(/\s+/g, "-");
-
   return (
-    <button type="button" className="profile-card profile-card-button" onClick={() => router.push(`/profile-view/${slug}`)}>
-      <Image
-        className="profile-image"
-        src={person.image}
-        alt={person.name}
-        fill
-        sizes="(max-width: 620px) 100vw, (max-width: 1180px) 50vw, 25vw"
-      />
+    <button
+      type="button"
+      className="profile-card profile-card-button"
+      onClick={() => router.push(`/profile-view/${person.id}`)}
+    >
+      {person.image ? (
+        <Image
+          className="profile-image"
+          src={person.image}
+          alt={person.name}
+          fill
+          sizes="(max-width: 620px) 100vw, (max-width: 1180px) 50vw, 25vw"
+        />
+      ) : (
+        <ProfileAvatarPlaceholder className="profile-image" />
+      )}
       <div className="profile-overlay" />
       <div className="profile-content">
         <h3>
@@ -236,7 +243,7 @@ function ProfileCard({ person }) {
 
 function People() {
   const t = useTranslations("discover");
-  const { data: people = [] } = useGetDiscoverPeopleQuery();
+  const { data: people = [], isLoading, isError } = useGetDiscoverPeopleQuery();
 
   return (
     <section className="discover-section people-section">
@@ -255,11 +262,19 @@ function People() {
         </div>
       </div>
 
-      <div className="people-grid">
-        {people.map((person) => (
-          <ProfileCard person={person} key={person.name} />
-        ))}
-      </div>
+      {isLoading ? (
+        <p className="people-status">{t("peopleLoading")}</p>
+      ) : isError ? (
+        <p className="people-status">{t("peopleError")}</p>
+      ) : people.length === 0 ? (
+        <p className="people-status">{t("peopleEmpty")}</p>
+      ) : (
+        <div className="people-grid">
+          {people.map((person) => (
+            <ProfileCard person={person} key={person.id} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

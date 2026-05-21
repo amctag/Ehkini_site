@@ -1,9 +1,11 @@
 import { api } from "./api";
+import { mapUsersResponse } from "./discoverMappers";
 
 export const discoverApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getDiscoverPeople: builder.query({
-      query: () => "/discover/people",
+      query: () => "users",
+      transformResponse: mapUsersResponse,
       providesTags: ["Discover"]
     }),
     getDiscoverStories: builder.query({

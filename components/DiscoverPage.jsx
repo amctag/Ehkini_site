@@ -1,10 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Filter, Heart, Search, Sparkles, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, Heart, Search, SendHorizontal, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  useGetDiscoverPeopleQuery,
+  useGetDiscoverStoriesQuery
+} from "@/store/discoverApi";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
@@ -24,34 +28,65 @@ function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
         aria-label={t("storyViewer.dialogAria")}
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="story-viewer-header">
-          <span>{t("storyViewer.count", { current: activeIndex + 1, total: storyItems.length })}</span>
-          <button type="button" onClick={onClose} aria-label={t("storyViewer.closeAria")}>
-            <X size={18} />
-          </button>
-        </header>
+        <Image
+          src={activeStory.image}
+          alt={t("storyImageAlt", { name: activeStory.name })}
+          fill
+          sizes="(max-width: 620px) 96vw, 420px"
+          className="story-viewer-image"
+        />
 
-        <div className="story-viewer-stage">
-          <button type="button" className="story-viewer-nav left" onClick={onPrevious} aria-label={t("storyViewer.previousAria")}>
-            <ChevronLeft size={22} />
-          </button>
+        <div className="story-viewer-top">
+          <div className="story-viewer-progress" aria-hidden="true">
+            {storyItems.map((story, index) => (
+              <span
+                key={`${story.name}-${index}`}
+                className={
+                  index < activeIndex
+                    ? "done"
+                    : index === activeIndex
+                      ? "active"
+                      : ""
+                }
+              >
+                <i />
+              </span>
+            ))}
+          </div>
 
-          <Image
-            src={activeStory.image}
-            alt={t("storyImageAlt", { name: activeStory.name })}
-            width={430}
-            height={680}
-            className="story-viewer-image"
-          />
+          <header className="story-viewer-header">
+            <div className="story-viewer-account">
+              <span className="story-viewer-avatar">
+                <Image src={activeStory.image} alt={activeStory.name} fill sizes="32px" />
+              </span>
+              <strong>{activeStory.name}</strong>
+              <small>{t("storyViewer.timeAgo")}</small>
+            </div>
 
-          <button type="button" className="story-viewer-nav right" onClick={onNext} aria-label={t("storyViewer.nextAria")}>
-            <ChevronRight size={22} />
-          </button>
+            <button type="button" onClick={onClose} aria-label={t("storyViewer.closeAria")}>
+              <X size={18} />
+            </button>
+          </header>
         </div>
 
+        <button type="button" className="story-viewer-zone left" onClick={onPrevious} aria-label={t("storyViewer.previousAria")}>
+          <span>
+            <ChevronLeft size={22} />
+          </span>
+        </button>
+        <button type="button" className="story-viewer-zone right" onClick={onNext} aria-label={t("storyViewer.nextAria")}>
+          <span>
+            <ChevronRight size={22} />
+          </span>
+        </button>
+
         <footer className="story-viewer-footer">
-          <strong>{activeStory.name}</strong>
-          <button type="button">{t("storyViewer.view")}</button>
+          <label className="story-viewer-reply">
+            <input type="text" placeholder={t("storyViewer.replyPlaceholder")} />
+          </label>
+          <button type="button" className="story-viewer-send" aria-label={t("storyViewer.sendReplyAria")}>
+            <SendHorizontal size={19} />
+          </button>
         </footer>
       </section>
     </div>
@@ -61,7 +96,7 @@ function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
 function Stories() {
   const router = useRouter();
   const t = useTranslations("discover");
-  const storyItems = useMemo(() => t.raw("storyItems"), [t]);
+  const { data: storyItems = [] } = useGetDiscoverStoriesQuery();
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
 
   useEffect(() => {
@@ -77,19 +112,45 @@ function Stories() {
     return () => window.removeEventListener("keydown", onEscape);
   }, [activeStoryIndex]);
 
-  function showPreviousStory() {
+  const showPreviousStory = useCallback(() => {
     setActiveStoryIndex((current) => {
       if (current === null) return 0;
       return (current - 1 + storyItems.length) % storyItems.length;
     });
-  }
+  }, [storyItems.length]);
 
-  function showNextStory() {
+  const showNextStory = useCallback(() => {
     setActiveStoryIndex((current) => {
       if (current === null) return 0;
       return (current + 1) % storyItems.length;
     });
-  }
+  }, [storyItems.length]);
+
+  useEffect(() => {
+    if (activeStoryIndex === null) return;
+
+    const timer = window.setTimeout(() => {
+      showNextStory();
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [activeStoryIndex, showNextStory]);
+
+  useEffect(() => {
+    if (activeStoryIndex === null) return;
+
+    function onArrowKeys(event) {
+      if (event.key === "ArrowLeft") {
+        showPreviousStory();
+      }
+      if (event.key === "ArrowRight") {
+        showNextStory();
+      }
+    }
+
+    window.addEventListener("keydown", onArrowKeys);
+    return () => window.removeEventListener("keydown", onArrowKeys);
+  }, [activeStoryIndex, showNextStory, showPreviousStory]);
 
   return (
     <>
@@ -145,7 +206,7 @@ function Stories() {
 function ProfileCard({ person }) {
   const router = useRouter();
 
-  const slug = person.name.toLowerCase().replace(/\s+/g, "-");
+  const slug = person.slug ?? person.name.toLowerCase().replace(/\s+/g, "-");
 
   return (
     <button type="button" className="profile-card profile-card-button" onClick={() => router.push(`/profile-view/${slug}`)}>
@@ -175,7 +236,7 @@ function ProfileCard({ person }) {
 
 function People() {
   const t = useTranslations("discover");
-  const people = t.raw("people");
+  const { data: people = [] } = useGetDiscoverPeopleQuery();
 
   return (
     <section className="discover-section people-section">

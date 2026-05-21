@@ -18,3 +18,26 @@ export {
   useRegisterMutation,
   useLogoutMutation
 } from "./authApi";
+export {
+  discoverApi,
+  useGetDiscoverPeopleQuery,
+  useGetDiscoverStoriesQuery
+} from "./discoverApi";
+export { profilesApi, useGetProfileBySlugQuery } from "./profilesApi";
+export {
+  messagesApi,
+  useGetContactsQuery,
+  useGetThreadQuery
+} from "./messagesApi";
+export {
+  friendsApi,
+  useGetFriendsQuery,
+  useGetFriendSuggestionsQuery
+} from "./friendsApi";
+export { giftsApi, useGetGiftCatalogQuery } from "./giftsApi";
+export {
+  walletApi,
+  useGetWalletBalanceQuery,
+  useGetWalletTransactionsQuery
+} from "./walletApi";
+export { settingsApi, useGetBlockedUsersQuery } from "./settingsApi";

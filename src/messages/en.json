@@ -304,6 +304,9 @@
       "closeAria": "Close story viewer",
       "previousAria": "Previous story",
       "nextAria": "Next story",
+      "timeAgo": "3h",
+      "replyPlaceholder": "Reply to story...",
+      "sendReplyAria": "Send reply",
       "count": "{current} / {total}",
       "view": "View"
     }

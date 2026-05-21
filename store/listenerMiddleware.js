@@ -17,3 +17,10 @@ listenerMiddleware.startListening({
     listenerApi.dispatch(clearAuth());
   }
 });
+
+listenerMiddleware.startListening({
+  matcher: authApi.endpoints.logout.matchFulfilled,
+  effect: (_action, listenerApi) => {
+    listenerApi.dispatch(clearAuth());
+  }
+});

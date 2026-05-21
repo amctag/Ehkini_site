@@ -13,6 +13,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { mockProfilesBySlug } from "@/mocks/data/profiles/by-slug";
+import { useGetProfileBySlugQuery } from "@/store/profilesApi";
 import DashboardShell from "./DashboardShell";
 
 function buildFallbackProfile(slug, defaults, fallbackName) {
@@ -33,18 +35,23 @@ function buildFallbackProfile(slug, defaults, fallbackName) {
 
 export default function ProfileViewPage({ slug }) {
   const t = useTranslations("profileView");
-  const profiles = t.raw("profiles");
   const fallbackName = t("fallbackName");
   const fallbackAbout = t("fallbackAbout");
   const fallbackInterests = t.raw("fallbackInterests");
 
   const safeSlug = typeof slug === "string" ? slug.toLowerCase() : "";
+  const { data: fetchedProfile } = useGetProfileBySlugQuery(safeSlug, {
+    skip: !safeSlug
+  });
+
   const defaultProfile = {
-    ...profiles.sarah,
+    ...mockProfilesBySlug.sarah,
     fallbackAbout,
     fallbackInterests
   };
-  const profile = profiles[safeSlug] ?? buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
+  const profile =
+    fetchedProfile ??
+    buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
 
   return (
     <DashboardShell activePageKey="discover" title={t("pageTitle")} subtitle={t("pageSubtitle")}>

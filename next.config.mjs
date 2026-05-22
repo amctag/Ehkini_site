@@ -2,6 +2,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // EasyPanel preview / dev over public URL (webpack HMR)
+  allowedDevOrigins: [
+    "amctag-website-ehkini.38f0fz.easypanel.host",
+    "*.38f0fz.easypanel.host"
+  ],
   images: {
     remotePatterns: [
       {

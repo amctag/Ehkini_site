@@ -12,8 +12,7 @@ const publicEndpoints = new Set([
   "checkPhone",
   "register",
   "sendRegisterOtp",
-  "verifyRegisterOtp",
-  "completeRegister"
+  "verifyRegisterOtp"
 ]);
 
 const rawBaseQuery = fetchBaseQuery({

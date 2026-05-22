@@ -67,16 +67,24 @@ export function mapFriendRow(row, index = 0) {
   const id = row?.friendship_id ?? row?.id ?? user?.id ?? `friend-${index}`;
 
   return {
+    ...user,
     id,
     userId: user?.id ?? row?.friend_id ?? row?.user_id,
     name: pickName(user),
+    full_name: user?.full_name ?? pickName(user),
     location: user?.location ?? row?.location ?? "",
+    about_me: user?.about_me ?? row?.about_me ?? "",
+    age: user?.age ?? row?.age ?? "",
+    date_of_birth: user?.date_of_birth ?? row?.date_of_birth ?? "",
+    interests: user?.interests ?? row?.interests ?? [],
     status: row?.status ?? user?.status ?? "",
     mutual: row?.mutual ?? row?.mutual_label ?? "",
     mutualCount,
     connected: row?.connected ?? row?.connected_label ?? "",
     connectedAt,
     image: pickImage(user),
+    avatar: pickImage(user),
+    profile_image_url: user?.profile_image_url ?? row?.profile_image_url ?? null,
     isOnline
   };
 }

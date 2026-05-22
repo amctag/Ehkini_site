@@ -25,6 +25,7 @@ function formatConnectedDate(value, t) {
 
 function FriendCard({ friend }) {
   const t = useTranslations("friends");
+  const profileHref = `/profile-view/${friend.userId ?? friend.id}`;
   const status = friend.isOnline ? t("friend.online") : friend.status;
   const mutual =
     friend.mutual ||
@@ -34,16 +35,22 @@ function FriendCard({ friend }) {
   return (
     <article className="friend-card">
       <div className="friend-card-header">
-        <span className="friend-avatar">
-          <Image src={friend.image} alt={friend.name} width={64} height={64} unoptimized />
-          {friend.isOnline ? <span /> : null}
-        </span>
+        <Link
+          className="friend-profile-link"
+          href={profileHref}
+          aria-label={t("friend.viewProfileAria", { name: friend.name })}
+        >
+          <span className="friend-avatar">
+            <Image src={friend.image} alt={friend.name} width={64} height={64} unoptimized />
+            {friend.isOnline ? <span /> : null}
+          </span>
 
-        <div className="friend-details">
-          <h3>{friend.name}</h3>
-          {friend.location ? <p>{friend.location}</p> : null}
-          {status ? <small>{status}</small> : null}
-        </div>
+          <span className="friend-details">
+            <h3>{friend.name}</h3>
+            {friend.location ? <p>{friend.location}</p> : null}
+            {status ? <small>{status}</small> : null}
+          </span>
+        </Link>
 
         <button className="friend-menu" type="button" aria-label={t("friend.moreOptionsAria", { name: friend.name })}>
           <MoreVertical size={20} />

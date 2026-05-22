@@ -378,6 +378,7 @@
     },
     "suggestedHeading": "Suggested Friends",
     "friend": {
+      "viewProfileAria": "View {name}'s profile",
       "moreOptionsAria": "More options for {name}",
       "messageAria": "Message {name}",
       "callAria": "Call {name}",
@@ -728,6 +729,14 @@
   "profile": {
     "pageTitle": "Profile",
     "pageSubtitle": "Your profile and settings",
+    "fallbackName": "My Profile",
+    "emptyField": "Not provided",
+    "emptyBio": "No bio added yet.",
+    "statsLabels": {
+      "age": "Age",
+      "gender": "Gender",
+      "memberSince": "Member Since"
+    },
     "edit": "Edit",
     "myProfile": "My Profile",
     "avatarAlt": "My profile",
@@ -1060,10 +1069,13 @@
       "photos": "Photos"
     },
     "detailLabels": {
+      "age": "Age",
+      "gender": "Gender",
       "occupation": "Occupation",
       "education": "Education",
       "memberSince": "Member Since"
     },
+    "emptyField": "Not provided",
     "photoAlt": "{name} photo {index}",
     "fallbackName": "Profile",
     "fallbackAbout": "Open to new friendships, shared hobbies, and meaningful conversations with kind people.",

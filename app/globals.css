@@ -2880,9 +2880,23 @@ a {
 
 .friend-card-header {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: start;
+}
+
+.friend-profile-link {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: start;
+  gap: 12px;
+  border-radius: 10px;
+}
+
+.friend-profile-link:focus-visible {
+  outline: 3px solid rgba(255, 115, 54, 0.28);
+  outline-offset: 4px;
 }
 
 .friend-avatar {
@@ -3108,6 +3122,23 @@ a {
   border: 4px solid #ff7336;
   border-radius: 999px;
   object-fit: cover;
+}
+
+.profile-summary-avatar-fallback {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  border: 4px solid #ff7336;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff7336, #07064f);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.profile-edit-avatar .profile-summary-avatar-fallback {
+  border-width: 3px;
+  font-size: 24px;
 }
 
 .profile-summary-head h2,
@@ -4830,7 +4861,12 @@ a {
   }
 
   .friend-card-header {
-    grid-template-columns: 56px 1fr auto;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .friend-profile-link {
+    grid-template-columns: 56px 1fr;
     gap: 10px;
   }
 

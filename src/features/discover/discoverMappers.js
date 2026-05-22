@@ -13,13 +13,18 @@ export function mapUserToDiscoverCard(user) {
       : interestNames;
 
   return {
+    ...user,
     id: user.id,
     name,
+    full_name: user.full_name ?? name,
     age: user.age ?? "",
     distance: user.location ?? "",
     bio: user.about_me ?? "",
+    about: user.about_me ?? "",
     tags,
-    image: user.profile_image_url || null
+    image: user.profile_image_url || null,
+    avatar: user.profile_image_url || null,
+    interests: user.interests ?? []
   };
 }
 

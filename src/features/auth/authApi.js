@@ -190,30 +190,6 @@ export const authApi = api.injectEndpoints({
         };
       }
     }),
-    completeRegister: builder.mutation({
-      query: (body) => ({
-        url: "register/complete",
-        method: "POST",
-        body
-      }),
-      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
-          const didPersistAuth = persistAuthenticatedPayload(data, dispatch);
-          if (!didPersistAuth) return;
-
-          dispatch(
-            api.endpoints.getMe.initiate(undefined, {
-              forceRefetch: true,
-              subscribe: false
-            })
-          );
-          dispatch(clearSignupDraft());
-        } catch {
-          // Component-level UX handles registration errors.
-        }
-      }
-    }),
     logout: builder.mutation({
       query: () => ({
         url: "logout",
@@ -241,6 +217,5 @@ export const {
   useRegisterMutation,
   useSendRegisterOtpMutation,
   useVerifyRegisterOtpMutation,
-  useCompleteRegisterMutation,
   useLogoutMutation
 } = authApi;

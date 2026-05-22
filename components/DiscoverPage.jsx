@@ -220,6 +220,7 @@ function ProfileCard({ person }) {
           src={person.image}
           alt={person.name}
           fill
+          unoptimized
           sizes="(max-width: 620px) 100vw, (max-width: 1180px) 50vw, 25vw"
         />
       ) : (

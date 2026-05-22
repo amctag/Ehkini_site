@@ -1,6 +1,15 @@
 import { api } from "@/src/services/baseApi";
-import { clearAuth, setAuthError, setUser } from "./authSlice";
+import { clearAuth, setAuthError, setAuthToken, setUser } from "./authSlice";
 import { mapCountriesResponse } from "./countriesMappers";
+import { clearStoredAuthToken, storeAuthToken } from "./tokenStorage";
+
+function pickLoginToken(payload) {
+  return payload?.token ?? payload?.access_token ?? payload?.data?.token ?? null;
+}
+
+function pickLoginUser(payload) {
+  return payload?.user ?? payload?.data?.user ?? null;
+}
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -28,8 +37,28 @@ export const authApi = api.injectEndpoints({
       }),
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
-          await queryFulfilled;
-          dispatch(api.endpoints.getMe.initiate());
+          const { data } = await queryFulfilled;
+          const token = pickLoginToken(data);
+
+          if (!token) {
+            dispatch(setAuthError("Login succeeded but no auth token was returned"));
+            return;
+          }
+
+          storeAuthToken(token);
+          dispatch(setAuthToken(token));
+
+          const user = pickLoginUser(data);
+          if (user) {
+            dispatch(setUser(user));
+          }
+
+          dispatch(
+            api.endpoints.getMe.initiate(undefined, {
+              forceRefetch: true,
+              subscribe: false
+            })
+          );
         } catch (err) {
           const message =
             err.error?.data?.message ??
@@ -51,6 +80,14 @@ export const authApi = api.injectEndpoints({
         url: "logout",
         method: "POST"
       }),
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } finally {
+          clearStoredAuthToken();
+          dispatch(clearAuth());
+        }
+      },
       invalidatesTags: ["User"]
     })
   })

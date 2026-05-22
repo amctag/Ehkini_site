@@ -28,7 +28,11 @@
     "passwordPlaceholder": "Enter your password",
     "forgotPassword": "Forgot Password?",
     "loggingInButton": "Logging in...",
+    "invalidPassword": "Invalid password",
+    "tryAnotherCredential": "Try another password or phone number.",
+    "validationFailed": "Please check your phone number and password.",
     "loginFailed": "Login failed",
+    "dismissError": "Dismiss login error",
     "loginButton": "Login",
     "noAccount": "Don't have an account?",
     "signupLink": "Sign Up"

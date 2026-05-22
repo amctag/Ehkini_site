@@ -9,6 +9,28 @@ import {
   useLoginMutation
 } from "@/src/features/auth/authApi";
 
+function getFirstValidationMessage(errors) {
+  if (!errors || typeof errors !== "object") return "";
+
+  const firstField = Object.values(errors)[0];
+  if (Array.isArray(firstField)) return firstField[0] ?? "";
+  if (typeof firstField === "string") return firstField;
+
+  return "";
+}
+
+function getLoginErrorMessage(error, t) {
+  if (error?.status === 401) {
+    return t("invalidPassword");
+  }
+
+  if (error?.status === 422) {
+    return getFirstValidationMessage(error?.data?.errors) || t("validationFailed");
+  }
+
+  return error?.data?.message ?? error?.data?.error ?? t("loginFailed");
+}
+
 export default function LoginCard() {
   const t = useTranslations("loginCard");
   const router = useRouter();
@@ -42,6 +64,12 @@ export default function LoginCard() {
     return resolvedCountryOptions[0]?.value ?? "";
   }, [resolvedCountryOptions, countryCode]);
 
+  function clearFormError() {
+    if (formError) {
+      setFormError("");
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setFormError("");
@@ -55,11 +83,7 @@ export default function LoginCard() {
       await login(payload).unwrap();
       router.push("/discover");
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.data?.error ??
-        t("loginFailed");
-      setFormError(String(message));
+      setFormError(String(getLoginErrorMessage(error, t)));
     }
   }
 
@@ -76,7 +100,10 @@ export default function LoginCard() {
           <select
             name="country_code"
             value={selectedCountryCode}
-            onChange={(event) => setCountryCode(event.target.value)}
+            onChange={(event) => {
+              setCountryCode(event.target.value);
+              clearFormError();
+            }}
             disabled={isLoadingCountries || resolvedCountryOptions.length === 0}
           >
             {resolvedCountryOptions.map((country) => (
@@ -95,7 +122,10 @@ export default function LoginCard() {
             placeholder={t("phonePlaceholder")}
             autoComplete="tel"
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              clearFormError();
+            }}
             required
           />
         </label>
@@ -109,7 +139,10 @@ export default function LoginCard() {
           placeholder={t("passwordPlaceholder")}
           autoComplete="current-password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearFormError();
+          }}
           required
         />
       </label>
@@ -122,7 +155,23 @@ export default function LoginCard() {
         {isLoggingIn ? t("loggingInButton") : t("loginButton")}
       </button>
 
-      {formError ? <p className="auth-error-text">{formError}</p> : null}
+      {formError ? (
+        <div className="auth-error-popup" role="alert" aria-live="polite">
+          <span className="auth-error-dot" aria-hidden="true" />
+          <span className="auth-error-copy">
+            <strong>{formError}</strong>
+            <small>{t("tryAnotherCredential")}</small>
+          </span>
+          <button
+            className="auth-error-close"
+            type="button"
+            onClick={() => setFormError("")}
+            aria-label={t("dismissError")}
+          >
+            x
+          </button>
+        </div>
+      ) : null}
 
       <p className="signup-copy">
         {t("noAccount")} <Link href="/signup">{t("signupLink")}</Link>

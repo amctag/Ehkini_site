@@ -28,7 +28,11 @@
     "passwordPlaceholder": "أدخل كلمة المرور",
     "forgotPassword": "هل نسيت كلمة المرور؟",
     "loggingInButton": "Logging in...",
+    "invalidPassword": "كلمة المرور غير صحيحة",
+    "tryAnotherCredential": "جرّب كلمة مرور أو رقم هاتف آخر.",
+    "validationFailed": "يرجى التحقق من رقم الهاتف وكلمة المرور.",
     "loginFailed": "Login failed",
+    "dismissError": "إغلاق خطأ تسجيل الدخول",
     "loginButton": "تسجيل الدخول",
     "noAccount": "ليس لديك حساب؟",
     "signupLink": "إنشاء حساب"

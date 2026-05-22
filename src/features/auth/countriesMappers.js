@@ -1,6 +1,6 @@
 function pickCountryCode(country) {
   if (!country || typeof country !== "object") return "";
-  return country.country_code ?? country.dial_code ?? country.code ?? "";
+  return country.country_code ?? country.phone_code ?? country.dial_code ?? country.code ?? "";
 }
 
 function pickCountryName(country) {
@@ -14,6 +14,7 @@ export function mapCountryOption(country) {
   const label = name ? `${name} (${value})` : value;
 
   return {
+    id: country?.id ?? null,
     value,
     label
   };

@@ -5,11 +5,25 @@ import { mockBaseQuery } from "./mockBaseQuery";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 const useMock = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+const publicEndpoints = new Set([
+  "getCountries",
+  "getInterests",
+  "login",
+  "checkPhone",
+  "register",
+  "sendRegisterOtp",
+  "verifyRegisterOtp",
+  "completeRegister"
+]);
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl,
-  prepareHeaders: (headers, { getState }) => {
+  prepareHeaders: (headers, { getState, endpoint }) => {
     headers.set("Accept", "application/json");
+
+    if (publicEndpoints.has(endpoint)) {
+      return headers;
+    }
 
     const token = getState().auth?.token;
     if (token) {

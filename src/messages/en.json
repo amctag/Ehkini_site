@@ -49,10 +49,9 @@
     "selectGender": "Select gender",
     "genders": {
       "female": "Female",
-      "male": "Male",
-      "nonBinary": "Non-binary",
-      "preferNotToSay": "Prefer not to say"
+      "male": "Male"
     },
+    "countryCode": "Country Code",
     "phone": "Phone Number",
     "phonePlaceholder": "Enter your phone number",
     "password": "Password",
@@ -60,6 +59,15 @@
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm your password",
     "terms": "I agree to the terms and conditions",
+    "passwordMismatch": "Passwords do not match.",
+    "termsRequired": "Please accept the terms and conditions.",
+    "countryRequired": "Please wait for the country list to load.",
+    "checkingPhone": "Checking phone...",
+    "phoneExists": "This phone number is already registered.",
+    "signinInstead": "Sign in instead",
+    "ageNotAllowed": "You must be at least 18 years old to create an account.",
+    "phoneCheckFailed": "Could not check this phone number. Please try again.",
+    "phoneCheckUnexpected": "Could not verify this phone number response. Please try again.",
     "back": "Back",
     "continue": "Continue",
     "hasAccount": "Already have an account?",
@@ -87,7 +95,26 @@
       "Outdoors"
     ],
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "sendingOtp": "Sending OTP...",
+    "missingSignupData": "Please complete the previous signup steps first.",
+    "missingOtpToken": "OTP was sent, but the server did not return an OTP token.",
+    "missingVerifiedToken": "OTP was verified, but the server did not return a verification token.",
+    "otpSendFailed": "Could not send OTP. Please try again.",
+    "otpServiceUnavailable": "The OTP service is currently unavailable. Please try again later.",
+    "otpVerifyFailed": "Could not verify OTP. Please try again.",
+    "registrationFailed": "Could not create your account. Please check your details and try again.",
+    "missingAuthToken": "Your account was created, but the server did not return an auth token.",
+    "otp": {
+      "title": "Confirm Phone Number",
+      "subtitle": "Enter the OTP sent to {phone}",
+      "closeAria": "Close OTP confirmation",
+      "codeLabel": "OTP Code",
+      "codePlaceholder": "123456",
+      "cancel": "Cancel",
+      "verify": "Verify & Create Account",
+      "verifying": "Verifying..."
+    }
   },
   "profilePreferencesForm": {
     "title": "Profile & Preferences",
@@ -335,8 +362,13 @@
     "pageTitle": "Friends",
     "pageSubtitle": "Manage your connections",
     "myFriends": "My Friends",
-    "friendsCount": "6 Friends",
+    "friendsCount": "{count} Friends",
     "searchPlaceholder": "Search friends...",
+    "loadingFriends": "Loading friends...",
+    "friendsLoadError": "Could not load friends. Please try again.",
+    "emptyFriends": "No friends yet.",
+    "mutualCount": "{count} mutual friends",
+    "connectedOn": "Connected {date}",
     "filters": {
       "onlineOnly": "Online Only",
       "recent": "Recent",
@@ -349,6 +381,7 @@
       "callAria": "Call {name}",
       "videoAria": "Video call {name}",
       "giftAria": "Send gift to {name}",
+      "online": "Active now",
       "message": "Message"
     },
     "addFriend": "Add Friend",

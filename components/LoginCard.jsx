@@ -8,6 +8,7 @@ import {
   useGetCountriesQuery,
   useLoginMutation
 } from "@/src/features/auth/authApi";
+import CountryCodeSelect from "./CountryCodeSelect";
 
 function getFirstValidationMessage(errors) {
   if (!errors || typeof errors !== "object") return "";
@@ -95,24 +96,19 @@ export default function LoginCard() {
       </div>
 
       <div className="field-grid">
-        <label className="field">
+        <div className="field">
           <span>{t("countryCodeLabel")}</span>
-          <select
-            name="country_code"
+          <CountryCodeSelect
+            ariaLabel={t("countryCodeLabel")}
+            options={resolvedCountryOptions}
             value={selectedCountryCode}
-            onChange={(event) => {
-              setCountryCode(event.target.value);
+            onChange={(nextValue) => {
+              setCountryCode(nextValue);
               clearFormError();
             }}
             disabled={isLoadingCountries || resolvedCountryOptions.length === 0}
-          >
-            {resolvedCountryOptions.map((country) => (
-              <option key={country.value} value={country.value}>
-                {country.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
 
         <label className="field">
           <span>{t("phoneLabel")}</span>

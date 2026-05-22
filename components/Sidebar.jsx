@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Camera,
   Gift,
@@ -11,7 +13,9 @@ import {
   X
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useLogoutMutation } from "@/src/features/auth/authApi";
 import AppLogo from "./AppLogo";
 
 const navItems = [
@@ -25,6 +29,19 @@ const navItems = [
 
 export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMobile }) {
   const t = useTranslations("sidebar");
+  const router = useRouter();
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+
+  async function handleLogout() {
+    try {
+      await logout().unwrap();
+    } catch {
+      // The logout mutation clears local auth state even if the server rejects the token.
+    } finally {
+      onCloseMobile?.();
+      router.replace("/");
+    }
+  }
 
   return (
     <aside className={`discover-sidebar ${isMobileOpen ? "mobile-open" : ""}`}>
@@ -61,10 +78,15 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
           <Settings size={17} />
           {t("settings")}
         </Link>
-        <Link className="logout-link" href="/" onClick={onCloseMobile}>
+        <button
+          className="logout-link"
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
           <LogOut size={17} />
           {t("logout")}
-        </Link>
+        </button>
       </div>
     </aside>
   );

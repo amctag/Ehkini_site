@@ -1,25 +1,48 @@
+"use client";
+
 import { Gift, MessageCircle, MoreVertical, Phone, Search, UserPlus, Users, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useGetFriendsQuery } from "@/src/features/friends/friendsApi";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
+function formatConnectedDate(value, t) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return t("connectedOn", {
+    date: date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    })
+  });
+}
+
 function FriendCard({ friend }) {
   const t = useTranslations("friends");
+  const status = friend.isOnline ? t("friend.online") : friend.status;
+  const mutual =
+    friend.mutual ||
+    (friend.mutualCount === null ? "" : t("mutualCount", { count: friend.mutualCount }));
+  const connected = friend.connected || formatConnectedDate(friend.connectedAt, t);
 
   return (
     <article className="friend-card">
       <div className="friend-card-header">
         <span className="friend-avatar">
-          <Image src={friend.image} alt={friend.name} width={64} height={64} />
-          <span />
+          <Image src={friend.image} alt={friend.name} width={64} height={64} unoptimized />
+          {friend.isOnline ? <span /> : null}
         </span>
 
         <div className="friend-details">
           <h3>{friend.name}</h3>
-          <p>{friend.location}</p>
-          <small>{friend.status}</small>
+          {friend.location ? <p>{friend.location}</p> : null}
+          {status ? <small>{status}</small> : null}
         </div>
 
         <button className="friend-menu" type="button" aria-label={t("friend.moreOptionsAria", { name: friend.name })}>
@@ -27,10 +50,12 @@ function FriendCard({ friend }) {
         </button>
       </div>
 
-      <div className="friend-meta">
-        <span>{friend.mutual}</span>
-        <span>{friend.connected}</span>
-      </div>
+      {mutual || connected ? (
+        <div className="friend-meta">
+          <span>{mutual}</span>
+          <span>{connected}</span>
+        </div>
+      ) : null}
 
       <div className="friend-actions">
         <Link className="message-friend" href="/messages" aria-label={t("friend.messageAria", { name: friend.name })}>
@@ -72,7 +97,7 @@ function SuggestedFriendCard({ suggestion }) {
 
 export default function FriendsPage() {
   const t = useTranslations("friends");
-  const friends = t.raw("friendsList");
+  const { data: friends = [], isError, isLoading } = useGetFriendsQuery();
   const suggestions = t.raw("suggestions");
 
   return (
@@ -81,7 +106,7 @@ export default function FriendsPage() {
         <div className="friends-toolbar">
           <div className="friends-title-row">
             <SectionTitle icon={Users} iconProps={{ size: 24 }} title={t("myFriends")} />
-            <span>{t("friendsCount")}</span>
+            <span>{t("friendsCount", { count: friends.length })}</span>
           </div>
 
           <label className="friends-search">
@@ -96,11 +121,25 @@ export default function FriendsPage() {
           </div>
         </div>
 
-        <div className="friends-grid">
-          {friends.map((friend) => (
-            <FriendCard friend={friend} key={friend.id} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="friends-state">{t("loadingFriends")}</div>
+        ) : null}
+
+        {isError ? (
+          <div className="friends-state error">{t("friendsLoadError")}</div>
+        ) : null}
+
+        {!isLoading && !isError && friends.length === 0 ? (
+          <div className="friends-state">{t("emptyFriends")}</div>
+        ) : null}
+
+        {!isLoading && !isError && friends.length > 0 ? (
+          <div className="friends-grid">
+            {friends.map((friend) => (
+              <FriendCard friend={friend} key={friend.id} />
+            ))}
+          </div>
+        ) : null}
 
         <h2 className="suggested-heading">{t("suggestedHeading")}</h2>
         <div className="suggested-grid">

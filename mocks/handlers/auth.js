@@ -1,13 +1,18 @@
 import { mockCurrentUser } from "@/mocks/data/auth/user";
+import { mockCountries } from "@/mocks/data/auth/countries";
 
 const DEMO_PASSWORD = "demo";
 
 export function handleAuth({ url, method, body }) {
-  if (url === "/auth/me" && method === "GET") {
+  if ((url === "/me" || url === "/auth/me") && method === "GET") {
     return { data: mockCurrentUser };
   }
 
-  if (url === "/auth/login" && method === "POST") {
+  if ((url === "/countries" || url === "/auth/countries") && method === "GET") {
+    return { data: mockCountries };
+  }
+
+  if ((url === "/login" || url === "/auth/login") && method === "POST") {
     const password = body?.password;
     if (password === DEMO_PASSWORD) {
       return { data: { ok: true } };
@@ -20,11 +25,11 @@ export function handleAuth({ url, method, body }) {
     };
   }
 
-  if (url === "/auth/register" && method === "POST") {
+  if ((url === "/register" || url === "/auth/register") && method === "POST") {
     return { data: { ok: true, userId: "user-new" } };
   }
 
-  if (url === "/auth/logout" && method === "POST") {
+  if ((url === "/logout" || url === "/auth/logout") && method === "POST") {
     return { data: { ok: true } };
   }
 

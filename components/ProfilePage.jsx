@@ -1,15 +1,168 @@
 "use client";
 
-import { Camera, Edit, Images, MapPin, Plus, X } from "lucide-react";
+import { Camera, Edit, Gift, Images, MapPin, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { selectCurrentUser } from "@/src/features/auth/authSlice";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import DashboardShell from "./DashboardShell";
 
-function EditProfileModal({ open, onClose }) {
+function unwrapCurrentUser(payload) {
+  return payload?.user ?? payload?.data?.user ?? payload?.data ?? payload ?? {};
+}
+
+function interestLabel(interest) {
+  if (typeof interest === "string") return interest;
+  return interest?.name ?? interest?.title ?? "";
+}
+
+function fullNameOf(user, fallback) {
+  const fullName = String(user?.full_name ?? "").trim();
+  if (fullName) return fullName;
+
+  const firstLastName = [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim();
+  if (firstLastName) return firstLastName;
+
+  return String(user?.name ?? fallback).trim() || fallback;
+}
+
+function initialsOf(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "U";
+}
+
+function validImageUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  return value.startsWith("http") || value.startsWith("/") ? value : "";
+}
+
+function formatMemberSince(value, fallback) {
+  if (!value) return fallback;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric"
+  });
+}
+
+function mapPhotoUrl(photo) {
+  if (typeof photo === "string") return validImageUrl(photo);
+  return validImageUrl(photo?.url ?? photo?.image_url ?? photo?.photo_url ?? photo?.path);
+}
+
+function fullNameFromParts(value, fallback = "") {
+  if (!value || typeof value !== "object") return fallback;
+  const fullName = String(value.full_name ?? "").trim();
+  if (fullName) return fullName;
+  const firstLastName = [value.first_name, value.last_name].filter(Boolean).join(" ").trim();
+  if (firstLastName) return firstLastName;
+  return String(value.name ?? fallback).trim() || fallback;
+}
+
+function mapGiftItem(gift) {
+  if (!gift || typeof gift !== "object") return null;
+
+  const sender =
+    gift.sender ??
+    gift.from_user ??
+    gift.from ??
+    gift.user ??
+    null;
+  const senderName =
+    (typeof gift.from === "string" && gift.from.trim()) ||
+    (typeof gift.sender_name === "string" && gift.sender_name.trim()) ||
+    (typeof gift.from_name === "string" && gift.from_name.trim()) ||
+    fullNameFromParts(sender, "");
+  const icon =
+    (typeof gift.icon === "string" && gift.icon.trim()) ||
+    (typeof gift.gift_icon === "string" && gift.gift_icon.trim()) ||
+    (typeof gift.emoji === "string" && gift.emoji.trim()) ||
+    "🎁";
+  const rawTime =
+    (typeof gift.time === "string" && gift.time.trim()) ||
+    (typeof gift.created_at === "string" && gift.created_at.trim()) ||
+    "";
+
+  return {
+    icon,
+    from: senderName || "",
+    time: rawTime || ""
+  };
+}
+
+function buildProfile(userPayload, t) {
+  const user = unwrapCurrentUser(userPayload);
+  const name = fullNameOf(user, t("fallbackName"));
+  const avatar = validImageUrl(user.profile_image_url ?? user.avatar_url ?? user.avatar ?? user.profile_image);
+  const interests = (user.interests ?? []).map(interestLabel).filter(Boolean);
+  const photos = (user.photos ?? user.images ?? user.gallery ?? [])
+    .map(mapPhotoUrl)
+    .filter(Boolean);
+
+  if (avatar && photos.length === 0) {
+    photos.push(avatar);
+  }
+  const rawReceivedGifts =
+    user.received_gifts ??
+    user.gifts_received ??
+    user.receivedGifts ??
+    [];
+  const receivedGifts = Array.isArray(rawReceivedGifts)
+    ? rawReceivedGifts.map(mapGiftItem).filter(Boolean)
+    : [];
+
+  return {
+    id: user.id ?? "",
+    name,
+    initials: initialsOf(name),
+    avatar,
+    location: user.location ?? "",
+    bio: user.about_me ?? user.about ?? user.bio ?? "",
+    age: user.age ?? "",
+    gender: user.gender ?? "",
+    memberSince: formatMemberSince(user.created_at, ""),
+    interests,
+    photos,
+    receivedGifts
+  };
+}
+
+function ProfileAvatar({ profile, alt, size = 84 }) {
+  if (profile.avatar) {
+    return (
+      <Image
+        src={profile.avatar}
+        alt={alt}
+        width={size}
+        height={size}
+        unoptimized
+      />
+    );
+  }
+
+  return (
+    <span
+      className="profile-summary-avatar-fallback"
+      aria-label={alt}
+      style={{ width: size, height: size }}
+    >
+      {profile.initials}
+    </span>
+  );
+}
+
+function EditProfileModal({ open, onClose, profile }) {
   const t = useTranslations("profile.editModal");
-  const [bio, setBio] = useState(t("bioDefault"));
-  const [interests, setInterests] = useState(t.raw("initialInterests"));
+  const [bio, setBio] = useState(profile.bio);
+  const [interests, setInterests] = useState(profile.interests);
   const [customInterest, setCustomInterest] = useState("");
   const suggestedInterests = t.raw("suggestedInterests");
 
@@ -62,12 +215,7 @@ function EditProfileModal({ open, onClose }) {
         <div className="profile-edit-body">
           <div className="profile-edit-avatar-wrap">
             <div className="profile-edit-avatar">
-              <Image
-                src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=220&q=85"
-                alt={t("avatarAlt")}
-                width={92}
-                height={92}
-              />
+              <ProfileAvatar profile={profile} alt={t("avatarAlt")} size={92} />
               <button type="button" aria-label={t("uploadAria")} className="profile-edit-photo-btn">
                 <Camera size={15} />
               </button>
@@ -77,19 +225,19 @@ function EditProfileModal({ open, onClose }) {
 
           <label className="profile-edit-field">
             <span>{t("name")}</span>
-            <input defaultValue={t("nameDefault")} />
+            <input defaultValue={profile.name} />
           </label>
 
           <label className="profile-edit-field">
             <span>{t("age")}</span>
-            <input defaultValue={t("ageDefault")} />
+            <input defaultValue={profile.age} />
           </label>
 
           <label className="profile-edit-field">
             <span>{t("location")}</span>
             <div className="profile-edit-location-wrap">
               <MapPin size={15} />
-              <input defaultValue={t("locationDefault")} />
+              <input defaultValue={profile.location} />
             </div>
           </label>
 
@@ -155,9 +303,28 @@ function EditProfileModal({ open, onClose }) {
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
-  const stats = t.raw("stats");
-  const photos = t.raw("photos");
-  const tags = t.raw("tags");
+  const currentUser = useAppSelector(selectCurrentUser);
+  const profile = buildProfile(currentUser, t);
+  const photos = profile.photos;
+  const receivedGifts = profile.receivedGifts;
+  const tags = profile.interests;
+  const stats = [
+    {
+      label: t("statsLabels.age"),
+      value: profile.age || t("emptyField"),
+      tone: "peach"
+    },
+    {
+      label: t("statsLabels.gender"),
+      value: profile.gender || t("emptyField"),
+      tone: "purple"
+    },
+    {
+      label: t("statsLabels.memberSince"),
+      value: profile.memberSince || t("emptyField"),
+      tone: "cream"
+    }
+  ];
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   return (
@@ -170,27 +337,26 @@ export default function ProfilePage() {
           </button>
 
           <div className="profile-summary-head">
-            <Image
-              src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=180&q=85"
-              alt={t("avatarAlt")}
-              width={84}
-              height={84}
-            />
+            <ProfileAvatar profile={profile} alt={t("avatarAlt")} />
             <div>
-              <h2>{t("myProfile")}</h2>
-              <p>
-                <MapPin size={16} />
-                {t("location")}
-              </p>
-              <div className="profile-tags">
-                {tags.map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-              </div>
+              <h2>{profile.name}</h2>
+              {profile.location ? (
+                <p>
+                  <MapPin size={16} />
+                  {profile.location}
+                </p>
+              ) : null}
+              {tags.length > 0 ? (
+                <div className="profile-tags">
+                  {tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
 
-          <p className="profile-bio">{t("bio")}</p>
+          <p className="profile-bio">{profile.bio || t("emptyBio")}</p>
 
           <div className="profile-stats">
             {stats.map((stat) => (
@@ -202,27 +368,58 @@ export default function ProfilePage() {
           </div>
         </article>
 
-        <article className="profile-photos-panel">
+        <article className={`profile-photos-panel ${photos.length === 0 ? "compact-empty" : ""}`}>
           <h2>
             <Images size={20} />
             {t("photosHeading")}
           </h2>
-          <div className="profile-photos-grid">
-            {photos.map((photo, index) => (
-              <div className={index === 0 ? "main-photo" : ""} key={`profile-photo-${index}`}>
-                <Image
-                  src={photo}
-                  alt={t("photoAlt", { index: index + 1 })}
-                  fill
-                  sizes="(max-width: 620px) 100vw, 50vw"
-                />
-              </div>
-            ))}
-          </div>
+          {photos.length > 0 ? (
+            <div className="profile-photos-grid">
+              {photos.map((photo, index) => (
+                <div className={index === 0 ? "main-photo" : ""} key={`profile-photo-${index}`}>
+                  <Image
+                    src={photo}
+                    alt={t("photoAlt", { index: index + 1 })}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 620px) 100vw, 50vw"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="profile-section-empty">{t("emptyPhotos")}</p>
+          )}
+        </article>
+
+        <article className={`profile-received-gifts-panel ${receivedGifts.length === 0 ? "compact-empty" : ""}`}>
+          <h2>
+            <Gift size={20} />
+            {t("giftsReceivedHeading")}
+          </h2>
+          {receivedGifts.length > 0 ? (
+            <div className="profile-received-gifts-list">
+              {receivedGifts.map((gift, index) => (
+                <div className="profile-received-gift" key={`profile-received-gift-${index}`}>
+                  <span className="profile-received-gift-icon" aria-hidden="true">
+                    {gift.icon}
+                  </span>
+                  <div>
+                    <strong>{gift.from ? t("fromPrefix", { name: gift.from }) : t("emptyField")}</strong>
+                    {gift.time ? <small>{gift.time}</small> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="profile-section-empty">{t("emptyReceivedGifts")}</p>
+          )}
         </article>
       </section>
 
-      <EditProfileModal open={isEditOpen} onClose={() => setIsEditOpen(false)} />
+      {isEditOpen ? (
+        <EditProfileModal open={isEditOpen} onClose={() => setIsEditOpen(false)} profile={profile} />
+      ) : null}
     </DashboardShell>
   );
 }

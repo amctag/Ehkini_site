@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/src/features/auth/authSlice";
+import usersReducer from "@/src/features/users/usersSlice";
 import { api } from "@/src/services/baseApi";
 import { listenerMiddleware } from "./listenerMiddleware";
 import "@/src/features/auth/authApi";
@@ -8,6 +9,7 @@ import "@/src/features/profiles/profilesApi";
 import "@/src/features/messages/messagesApi";
 import "@/src/features/friends/friendsApi";
 import "@/src/features/gifts/giftsApi";
+import "@/src/features/users/usersApi";
 import "@/src/features/wallet/walletApi";
 import "@/src/features/settings/settingsApi";
 
@@ -15,6 +17,7 @@ export function makeStore(preloadedState) {
   return configureStore({
     reducer: {
       auth: authReducer,
+      users: usersReducer,
       [api.reducerPath]: api.reducer
     },
     preloadedState,

@@ -1,14 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Filter, Heart, Search, SendHorizontal, Sparkles, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Filter, Heart, Search, SendHorizontal, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useGetDiscoverPeopleQuery,
   useGetDiscoverStoriesQuery
 } from "@/src/features/discover/discoverApi";
+import PeopleGridSkeleton from "@/src/features/discover/components/PeopleGridSkeleton";
 import DashboardShell from "./DashboardShell";
 import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";
@@ -219,6 +220,7 @@ function ProfileCard({ person }) {
           src={person.image}
           alt={person.name}
           fill
+          unoptimized
           sizes="(max-width: 620px) 100vw, (max-width: 1180px) 50vw, 25vw"
         />
       ) : (
@@ -244,6 +246,83 @@ function ProfileCard({ person }) {
 function People() {
   const t = useTranslations("discover");
   const { data: people = [], isLoading, isError } = useGetDiscoverPeopleQuery();
+  const [query, setQuery] = useState("");
+  const [filterKey, setFilterKey] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef(null);
+
+  const filterOptions = useMemo(
+    () => [
+      { key: "all", label: t("filterOptions.all") },
+      { key: "age18to25", label: t("filterOptions.age18to25") },
+      { key: "age26to30", label: t("filterOptions.age26to30") },
+      { key: "age31Plus", label: t("filterOptions.age31Plus") },
+      { key: "nearby", label: t("filterOptions.nearby") }
+    ],
+    [t]
+  );
+
+  const activeFilterLabel = useMemo(
+    () => filterOptions.find((option) => option.key === filterKey)?.label ?? t("filters"),
+    [filterOptions, filterKey, t]
+  );
+
+  useEffect(() => {
+    function onOutsideClick(event) {
+      if (!filterRef.current?.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    }
+
+    function onEscape(event) {
+      if (event.key === "Escape") {
+        setIsFilterOpen(false);
+      }
+    }
+
+    window.addEventListener("mousedown", onOutsideClick);
+    window.addEventListener("keydown", onEscape);
+    return () => {
+      window.removeEventListener("mousedown", onOutsideClick);
+      window.removeEventListener("keydown", onEscape);
+    };
+  }, []);
+
+  const filteredPeople = useMemo(() => {
+    const loweredQuery = query.trim().toLowerCase();
+
+    return people.filter((person) => {
+      const name = person.name ?? "";
+      const bio = person.bio ?? "";
+      const distance = person.distance ?? "";
+      const tags = Array.isArray(person.tags) ? person.tags.join(" ") : "";
+      const searchTarget = `${name} ${bio} ${distance} ${tags}`.toLowerCase();
+
+      if (loweredQuery && !searchTarget.includes(loweredQuery)) {
+        return false;
+      }
+
+      const numericAge = Number(person.age);
+      const hasAge = Number.isFinite(numericAge);
+
+      if (filterKey === "age18to25") {
+        return hasAge && numericAge >= 18 && numericAge <= 25;
+      }
+      if (filterKey === "age26to30") {
+        return hasAge && numericAge >= 26 && numericAge <= 30;
+      }
+      if (filterKey === "age31Plus") {
+        return hasAge && numericAge >= 31;
+      }
+      if (filterKey === "nearby") {
+        const distanceMatch = String(distance).match(/\d+/);
+        const km = distanceMatch ? Number(distanceMatch[0]) : Number.NaN;
+        return Number.isFinite(km) && km <= 10;
+      }
+
+      return true;
+    });
+  }, [people, query, filterKey]);
 
   return (
     <section className="discover-section people-section">
@@ -251,26 +330,61 @@ function People() {
         <SectionTitle icon={Heart} iconProps={{ size: 21 }} title={t("peopleHeading")} />
 
         <div className="people-tools">
-          <button type="button">
+          <label className="people-search-field">
             <Search size={18} />
-            {t("search")}
-          </button>
-          <button type="button">
-            <Filter size={18} />
-            {t("filters")}
-          </button>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+            />
+          </label>
+
+          <div className="people-filter-wrap" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen((current) => !current)}
+              aria-haspopup="menu"
+              aria-expanded={isFilterOpen}
+            >
+              <Filter size={18} />
+              {activeFilterLabel}
+            </button>
+
+            {isFilterOpen ? (
+              <div className="people-filter-menu" role="menu" aria-label={t("filters")}>
+                {filterOptions.map((option) => (
+                  <button
+                    type="button"
+                    key={option.key}
+                    role="menuitemradio"
+                    aria-checked={filterKey === option.key}
+                    className={filterKey === option.key ? "active" : ""}
+                    onClick={() => {
+                      setFilterKey(option.key);
+                      setIsFilterOpen(false);
+                    }}
+                  >
+                    <span>{option.label}</span>
+                    {filterKey === option.key ? <Check size={16} /> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {isLoading ? (
-        <p className="people-status">{t("peopleLoading")}</p>
+        <PeopleGridSkeleton />
       ) : isError ? (
         <p className="people-status">{t("peopleError")}</p>
-      ) : people.length === 0 ? (
+      ) : filteredPeople.length === 0 ? (
         <p className="people-status">{t("peopleEmpty")}</p>
       ) : (
         <div className="people-grid">
-          {people.map((person) => (
+          {filteredPeople.map((person) => (
             <ProfileCard person={person} key={person.id} />
           ))}
         </div>

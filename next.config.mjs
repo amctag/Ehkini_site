@@ -1,5 +1,9 @@
 import createNextIntlPlugin from "next-intl/plugin";
 
+const backendApiOrigin =
+  process.env.BACKEND_API_ORIGIN ??
+  "https://amctag-ehkini.38f0fz.easypanel.host";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // EasyPanel preview / dev over public URL (webpack HMR)
@@ -16,6 +20,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "amcserver.com"
+      },
+      {
+        protocol: "https",
+        hostname: "amctag-ehkini.38f0fz.easypanel.host"
       }
     ]
   },
@@ -23,7 +31,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://amcserver.com/app/taaruf/public/api/v2/:path*"
+        destination: `${backendApiOrigin}/api/v2/:path*`
       }
     ];
   }

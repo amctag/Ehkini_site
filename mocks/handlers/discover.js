@@ -4,11 +4,11 @@ import { mockDiscoverStories } from "@/mocks/data/discover/stories";
 export function handleDiscover({ url, method }) {
   if (method !== "GET") return null;
 
-  if (url === "/discover/people") {
+  if (url === "//people") {
     return { data: mockDiscoverPeople };
   }
 
-  if (url === "/discover/stories") {
+  if (url === "/stories") {
     return { data: mockDiscoverStories };
   }
 

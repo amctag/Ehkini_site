@@ -19,11 +19,20 @@
   "loginCard": {
     "title": "Welcome Back",
     "subtitle": "Log in to your account",
+    "countryCodeLabel": "Country Code",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
     "identifierLabel": "Email or Phone",
     "identifierPlaceholder": "Enter your email or phone",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
     "forgotPassword": "Forgot Password?",
+    "loggingInButton": "Logging in...",
+    "invalidPassword": "Invalid password",
+    "tryAnotherCredential": "Try another password or phone number.",
+    "validationFailed": "Please check your phone number and password.",
+    "loginFailed": "Login failed",
+    "dismissError": "Dismiss login error",
     "loginButton": "Login",
     "noAccount": "Don't have an account?",
     "signupLink": "Sign Up"
@@ -40,10 +49,9 @@
     "selectGender": "Select gender",
     "genders": {
       "female": "Female",
-      "male": "Male",
-      "nonBinary": "Non-binary",
-      "preferNotToSay": "Prefer not to say"
+      "male": "Male"
     },
+    "countryCode": "Country Code",
     "phone": "Phone Number",
     "phonePlaceholder": "Enter your phone number",
     "password": "Password",
@@ -51,6 +59,15 @@
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm your password",
     "terms": "I agree to the terms and conditions",
+    "passwordMismatch": "Passwords do not match.",
+    "termsRequired": "Please accept the terms and conditions.",
+    "countryRequired": "Please wait for the country list to load.",
+    "checkingPhone": "Checking phone...",
+    "phoneExists": "This phone number is already registered.",
+    "signinInstead": "Sign in instead",
+    "ageNotAllowed": "You must be at least 18 years old to create an account.",
+    "phoneCheckFailed": "Could not check this phone number. Please try again.",
+    "phoneCheckUnexpected": "Could not verify this phone number response. Please try again.",
     "back": "Back",
     "continue": "Continue",
     "hasAccount": "Already have an account?",
@@ -78,7 +95,26 @@
       "Outdoors"
     ],
     "back": "Back",
-    "continue": "Continue"
+    "continue": "Continue",
+    "sendingOtp": "Sending OTP...",
+    "missingSignupData": "Please complete the previous signup steps first.",
+    "missingOtpToken": "OTP was sent, but the server did not return an OTP token.",
+    "missingVerifiedToken": "OTP was verified, but the server did not return a verification token.",
+    "otpSendFailed": "Could not send OTP. Please try again.",
+    "otpServiceUnavailable": "The OTP service is currently unavailable. Please try again later.",
+    "otpVerifyFailed": "Could not verify OTP. Please try again.",
+    "registrationFailed": "Could not create your account. Please check your details and try again.",
+    "missingAuthToken": "Your account was created, but the server did not return an auth token.",
+    "otp": {
+      "title": "Confirm Phone Number",
+      "subtitle": "Enter the OTP sent to {phone}",
+      "closeAria": "Close OTP confirmation",
+      "codeLabel": "OTP Code",
+      "codePlaceholder": "123456",
+      "cancel": "Cancel",
+      "verify": "Verify & Create Account",
+      "verifying": "Verifying..."
+    }
   },
   "profilePreferencesForm": {
     "title": "Profile & Preferences",
@@ -95,14 +131,23 @@
   "sidebar": {
     "searchPlaceholder": "Search",
     "searchAriaLabel": "Search sidebar",
+    "recentSearches": "Recent searches",
+    "clearAll": "Clear all",
+    "noUsersFound": "No users found.",
+    "noRecentSearches": "No recent searches.",
+    "removeRecentAria": "Remove {name} from recent searches",
     "navAriaLabel": "Main navigation",
     "items": {
       "discover": "Discover",
       "giftMarket": "Gifts",
-      "stories": "Stories",
+      "create": "Create",
       "messages": "Messages",
       "friends": "Friends",
       "profile": "Profile"
+    },
+    "create": {
+      "post": "Post",
+      "story": "Story"
     },
     "settings": "Settings",
     "logout": "Logout"
@@ -183,7 +228,15 @@
     "peopleError": "Could not load people. Please try again.",
     "peopleEmpty": "No people to show right now.",
     "search": "Search",
+    "searchPlaceholder": "Search by name, bio, or interests",
     "filters": "Filters",
+    "filterOptions": {
+      "all": "All users",
+      "age18to25": "Age 18-25",
+      "age26to30": "Age 26-30",
+      "age31Plus": "Age 31+",
+      "nearby": "Nearby (<= 10 km)"
+    },
     "storyImageAlt": "{name}'s story",
     "storyItems": [
       {
@@ -318,8 +371,13 @@
     "pageTitle": "Friends",
     "pageSubtitle": "Manage your connections",
     "myFriends": "My Friends",
-    "friendsCount": "6 Friends",
+    "friendsCount": "{count} Friends",
     "searchPlaceholder": "Search friends...",
+    "loadingFriends": "Loading friends...",
+    "friendsLoadError": "Could not load friends. Please try again.",
+    "emptyFriends": "No friends yet.",
+    "mutualCount": "{count} mutual friends",
+    "connectedOn": "Connected {date}",
     "filters": {
       "onlineOnly": "Online Only",
       "recent": "Recent",
@@ -327,11 +385,13 @@
     },
     "suggestedHeading": "Suggested Friends",
     "friend": {
+      "viewProfileAria": "View {name}'s profile",
       "moreOptionsAria": "More options for {name}",
       "messageAria": "Message {name}",
       "callAria": "Call {name}",
       "videoAria": "Video call {name}",
       "giftAria": "Send gift to {name}",
+      "online": "Active now",
       "message": "Message"
     },
     "addFriend": "Add Friend",
@@ -533,7 +593,10 @@
         "description": "A mystery surprise",
         "category": "seasonal"
       }
-    ]
+    ],
+    "loadingGifts": "Loading gifts...",
+    "giftsLoadError": "Could not load gifts. Please try again.",
+    "emptyGifts": "No gifts available right now."
   },
   "giftSendModal": {
     "title": "Send {giftName}",
@@ -542,6 +605,9 @@
     "closeAria": "Close send gift modal",
     "sendTo": "Send to:",
     "recipientPlaceholder": "Select recipient",
+    "searchPlaceholder": "Search users by name",
+    "noUsersFound": "No users found.",
+    "selectedRecipient": "Selected: {name}",
     "messageLabel": "Message (optional):",
     "messagePlaceholder": "Add a personal message...",
     "submit": "Send Gift",
@@ -550,7 +616,8 @@
       "Fatima Hassan",
       "Amira Khan",
       "Layla Mohammed"
-    ]
+    ],
+    "sending": "Sending..."
   },
   "messages": {
     "pageTitle": "Messages",
@@ -646,12 +713,6 @@
         "description": "From gallery",
         "icon": "image",
         "tone": "purple"
-      },
-      {
-        "title": "Upload Video",
-        "description": "Share a video",
-        "icon": "video",
-        "tone": "orange"
       }
     ],
     "friendStories": [
@@ -673,9 +734,40 @@
       }
     ]
   },
+  "posts": {
+    "pageTitle": "Posts",
+    "pageSubtitle": "Create and share posts",
+    "heading": "Create Post",
+    "intro": "Upload a photo and add your caption",
+    "goToStories": "Switch to Stories",
+    "selectedFile": "Selected file: {name}",
+    "selectedPreviewAlt": "Selected media preview",
+    "captionLabel": "Caption",
+    "captionPlaceholder": "Write your caption here...",
+    "actions": [
+      {
+        "title": "Photo Post",
+        "description": "Upload an image",
+        "icon": "image"
+      },
+      {
+        "title": "Take Photo",
+        "description": "Use your camera",
+        "icon": "camera"
+      }
+    ]
+  },
   "profile": {
     "pageTitle": "Profile",
     "pageSubtitle": "Your profile and settings",
+    "fallbackName": "My Profile",
+    "emptyField": "Not provided",
+    "emptyBio": "No bio added yet.",
+    "statsLabels": {
+      "age": "Age",
+      "gender": "Gender",
+      "memberSince": "Member Since"
+    },
     "edit": "Edit",
     "myProfile": "My Profile",
     "avatarAlt": "My profile",
@@ -704,6 +796,7 @@
       }
     ],
     "giftsReceivedHeading": "Gifts Received",
+    "emptyReceivedGifts": "No gifts received yet.",
     "fromPrefix": "From {name}",
     "receivedGifts": [
       {
@@ -723,6 +816,7 @@
       }
     ],
     "photosHeading": "Photos",
+    "emptyPhotos": "No photos yet.",
     "photoAlt": "Profile photo {index}",
     "photos": [
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
@@ -1008,10 +1102,13 @@
       "photos": "Photos"
     },
     "detailLabels": {
+      "age": "Age",
+      "gender": "Gender",
       "occupation": "Occupation",
       "education": "Education",
       "memberSince": "Member Since"
     },
+    "emptyField": "Not provided",
     "photoAlt": "{name} photo {index}",
     "fallbackName": "Profile",
     "fallbackAbout": "Open to new friendships, shared hobbies, and meaningful conversations with kind people.",
@@ -1054,7 +1151,12 @@
           "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=360&q=80"
         ]
       }
-    }
+    },
+    "friendStatus": "Friend",
+    "requestSent": "Sent",
+    "cancelRequest": "Cancel request",
+    "requestSentMessage": "Friend request sent.",
+    "requestCanceledMessage": "Friend request canceled."
   },
   "wallet": {
     "pageTitle": "Wallet",

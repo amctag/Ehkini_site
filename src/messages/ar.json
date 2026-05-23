@@ -133,17 +133,26 @@
   "sidebar": {
     "searchPlaceholder": "بحث",
     "searchAriaLabel": "Search sidebar",
+    "recentSearches": "Recent searches",
+    "clearAll": "Clear all",
+    "noUsersFound": "No users found.",
+    "noRecentSearches": "No recent searches.",
+    "removeRecentAria": "Remove {name} from recent searches",
     "navAriaLabel": "Main navigation",
     "items": {
       "discover": "اكتشف",
       "giftMarket": "سوق الهدايا",
-      "stories": "القصص",
       "messages": "الرسائل",
       "friends": "الأصدقاء",
-      "profile": "الملف الشخصي"
+      "profile": "الملف الشخصي",
+      "create": "?????"
     },
     "settings": "الإعدادات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "create": {
+      "post": "?????",
+      "story": "???"
+    }
   },
   "dashboard": {
     "mobileMenuAria": "Open menu",
@@ -586,7 +595,10 @@
         "description": "A mystery surprise",
         "category": "seasonal"
       }
-    ]
+    ],
+    "loadingGifts": "Loading gifts...",
+    "giftsLoadError": "Could not load gifts. Please try again.",
+    "emptyGifts": "No gifts available right now."
   },
   "giftSendModal": {
     "title": "Send {giftName}",
@@ -595,6 +607,9 @@
     "closeAria": "Close send gift modal",
     "sendTo": "Send to:",
     "recipientPlaceholder": "Select recipient",
+    "searchPlaceholder": "Search users by name",
+    "noUsersFound": "No users found.",
+    "selectedRecipient": "Selected: {name}",
     "messageLabel": "Message (optional):",
     "messagePlaceholder": "Add a personal message...",
     "submit": "Send Gift",
@@ -603,7 +618,8 @@
       "Fatima Hassan",
       "Amira Khan",
       "Layla Mohammed"
-    ]
+    ],
+    "sending": "Sending..."
   },
   "messages": {
     "pageTitle": "Messages",
@@ -699,12 +715,6 @@
         "description": "From gallery",
         "icon": "image",
         "tone": "purple"
-      },
-      {
-        "title": "Upload Video",
-        "description": "Share a video",
-        "icon": "video",
-        "tone": "orange"
       }
     ],
     "friendStories": [
@@ -765,6 +775,7 @@
       }
     ],
     "giftsReceivedHeading": "Gifts Received",
+    "emptyReceivedGifts": "No gifts received yet.",
     "fromPrefix": "From {name}",
     "receivedGifts": [
       {
@@ -784,6 +795,7 @@
       }
     ],
     "photosHeading": "Photos",
+    "emptyPhotos": "No photos yet.",
     "photoAlt": "Profile photo {index}",
     "photos": [
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
@@ -1118,7 +1130,12 @@
           "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=360&q=80"
         ]
       }
-    }
+    },
+    "friendStatus": "Friend",
+    "requestSent": "Sent",
+    "cancelRequest": "Cancel request",
+    "requestSentMessage": "Friend request sent.",
+    "requestCanceledMessage": "Friend request canceled."
   },
   "wallet": {
     "pageTitle": "Wallet",
@@ -1184,7 +1201,28 @@
         "amount": "-$2"
       }
     ]
+  },
+  "posts": {
+    "pageTitle": "Posts",
+    "pageSubtitle": "Create and share posts",
+    "heading": "Create Post",
+    "intro": "Upload a photo and add your caption",
+    "goToStories": "Switch to Stories",
+    "selectedFile": "Selected file: {name}",
+    "selectedPreviewAlt": "Selected media preview",
+    "captionLabel": "Caption",
+    "captionPlaceholder": "Write your caption here...",
+    "actions": [
+      {
+        "title": "Photo Post",
+        "description": "Upload an image",
+        "icon": "image"
+      },
+      {
+        "title": "Take Photo",
+        "description": "Use your camera",
+        "icon": "camera"
+      }
+    ]
   }
 }
-
-

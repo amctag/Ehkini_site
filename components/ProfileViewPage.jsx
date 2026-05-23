@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Calendar,
   Cake,
+  Check,
   Gift,
   GraduationCap,
   MessageCircle,
@@ -14,7 +15,12 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { mockProfilesBySlug } from "@/mocks/data/profiles/by-slug";
+import {
+  useCancelFriendRequestMutation,
+  useSendFriendRequestMutation
+} from "@/src/features/friends/friendsApi";
 import { useGetProfileBySlugQuery } from "@/src/features/profiles/profilesApi";
 import { mapProfileResponse } from "@/src/features/profiles/profileMappers";
 import { useAppSelector } from "@/src/hooks/reduxHooks";
@@ -54,6 +60,34 @@ function rowsFromQueryData(data) {
 
 function profileIdOf(row) {
   return String(row?.userId ?? row?.user_id ?? row?.friend_id ?? row?.id ?? "");
+}
+
+function receiverIdOf(profile, slug) {
+  const rawId = profile?.id ?? profile?.userId ?? profile?.user_id ?? slug;
+  const idText = String(rawId ?? "").trim();
+  if (!idText) return null;
+  return /^\d+$/.test(idText) ? Number(idText) : idText;
+}
+
+function normalizeFriendshipStatus(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function isFriendStatus(status) {
+  return status === "friend" || status === "friends" || status === "accepted" || status === "is_friends";
+}
+
+function isSentStatus(status) {
+  return (
+    status === "pending" ||
+    status === "pending_sent" ||
+    status === "sent" ||
+    status === "request_sent" ||
+    status === "awaiting_response"
+  );
 }
 
 function profileRichnessScore(row) {
@@ -111,6 +145,22 @@ export default function ProfileViewPage({ slug }) {
     cachedProfile ??
     fetchedProfile ??
     buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
+  const receiverId = receiverIdOf(profile, safeSlug);
+  const [sendFriendRequest, { isLoading: isSendingFriendRequest }] = useSendFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCancelingFriendRequest }] = useCancelFriendRequestMutation();
+  const [friendshipOverride, setFriendshipOverride] = useState(null);
+  const [friendRequestMessage, setFriendRequestMessage] = useState("");
+  const receiverKey = String(receiverId ?? "");
+  const profileStatus = normalizeFriendshipStatus(profile?.friendshipStatus ?? profile?.friendship_status);
+  const isFriendFromProfile = isFriendStatus(profileStatus);
+  const isSentFromProfile = isSentStatus(profileStatus) || (Boolean(profile?.canCancel) && !isFriendFromProfile);
+  const friendshipIdFromProfile = profile?.friendshipId ?? profile?.friendship_id ?? null;
+  const canCancelFromProfile = Boolean(profile?.canCancel) || Boolean(friendshipIdFromProfile && isSentFromProfile);
+  const hasOverride = friendshipOverride?.receiverKey === receiverKey;
+  const isFriend = hasOverride ? Boolean(friendshipOverride?.isFriend) : isFriendFromProfile;
+  const isSent = hasOverride ? Boolean(friendshipOverride?.isSent) : isSentFromProfile;
+  const canCancel = hasOverride ? Boolean(friendshipOverride?.canCancel) : canCancelFromProfile;
+  const friendshipId = hasOverride ? friendshipOverride?.friendshipId : friendshipIdFromProfile;
 
   return (
     <DashboardShell activePageKey="discover" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
@@ -130,10 +180,76 @@ export default function ProfileViewPage({ slug }) {
         </div>
 
         <div className="profile-view-actions">
-          <button type="button" className="add-friend">
-            <UserPlus size={16} />
-            {t("addFriend")}
-          </button>
+          {isFriend ? (
+            <div className="friendship-state friend">
+              <Check size={15} />
+              {t("friendStatus")}
+            </div>
+          ) : null}
+          {!isFriend && isSent ? (
+            <div className="friendship-state sent">
+              <span className="friendship-state-label">
+                <Check size={14} />
+                {t("requestSent")}
+              </span>
+              {canCancel ? (
+                <button
+                  type="button"
+                  className="friendship-cancel"
+                  disabled={isCancelingFriendRequest}
+                  aria-label={t("cancelRequest")}
+                  onClick={async () => {
+                    if (!receiverId) return;
+                    const payload = friendshipId ? { friendship_id: friendshipId } : { receiver_id: receiverId };
+                    try {
+                      await cancelFriendRequest(payload).unwrap();
+                      setFriendshipOverride({
+                        receiverKey,
+                        isFriend: false,
+                        isSent: false,
+                        canCancel: false,
+                        friendshipId: null
+                      });
+                      setFriendRequestMessage(t("requestCanceledMessage"));
+                    } catch (error) {
+                      console.error("Failed to cancel friend request", error);
+                    }
+                  }}
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+          {!isFriend && !isSent ? (
+            <button
+              type="button"
+              className="add-friend"
+              disabled={!receiverId || isSendingFriendRequest}
+              onClick={async () => {
+                if (!receiverId) return;
+                try {
+                  const response = await sendFriendRequest({ receiver_id: receiverId }).unwrap();
+                  const nextFriendshipId = response?.friendship_id ?? response?.data?.friendship_id ?? null;
+                  setFriendshipOverride({
+                    receiverKey,
+                    isFriend: false,
+                    isSent: true,
+                    canCancel: true,
+                    friendshipId: nextFriendshipId
+                  });
+                  setFriendRequestMessage(
+                    String(response?.message ?? "").trim() || t("requestSentMessage")
+                  );
+                } catch (error) {
+                  console.error("Failed to send friend request", error);
+                }
+              }}
+            >
+              <UserPlus size={16} />
+              {isSendingFriendRequest ? `${t("addFriend")}...` : t("addFriend")}
+            </button>
+          ) : null}
           <button type="button" className="icon phone">
             <Phone size={16} />
           </button>
@@ -147,6 +263,7 @@ export default function ProfileViewPage({ slug }) {
             <MessageCircle size={16} />
             {t("message")}
           </Link>
+          {friendRequestMessage ? <p className="profile-view-request-feedback">{friendRequestMessage}</p> : null}
         </div>
 
         <div className="profile-view-grid">

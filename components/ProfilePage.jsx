@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Edit, Images, MapPin, Plus, X } from "lucide-react";
+import { Camera, Edit, Gift, Images, MapPin, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -58,6 +58,46 @@ function mapPhotoUrl(photo) {
   return validImageUrl(photo?.url ?? photo?.image_url ?? photo?.photo_url ?? photo?.path);
 }
 
+function fullNameFromParts(value, fallback = "") {
+  if (!value || typeof value !== "object") return fallback;
+  const fullName = String(value.full_name ?? "").trim();
+  if (fullName) return fullName;
+  const firstLastName = [value.first_name, value.last_name].filter(Boolean).join(" ").trim();
+  if (firstLastName) return firstLastName;
+  return String(value.name ?? fallback).trim() || fallback;
+}
+
+function mapGiftItem(gift) {
+  if (!gift || typeof gift !== "object") return null;
+
+  const sender =
+    gift.sender ??
+    gift.from_user ??
+    gift.from ??
+    gift.user ??
+    null;
+  const senderName =
+    (typeof gift.from === "string" && gift.from.trim()) ||
+    (typeof gift.sender_name === "string" && gift.sender_name.trim()) ||
+    (typeof gift.from_name === "string" && gift.from_name.trim()) ||
+    fullNameFromParts(sender, "");
+  const icon =
+    (typeof gift.icon === "string" && gift.icon.trim()) ||
+    (typeof gift.gift_icon === "string" && gift.gift_icon.trim()) ||
+    (typeof gift.emoji === "string" && gift.emoji.trim()) ||
+    "🎁";
+  const rawTime =
+    (typeof gift.time === "string" && gift.time.trim()) ||
+    (typeof gift.created_at === "string" && gift.created_at.trim()) ||
+    "";
+
+  return {
+    icon,
+    from: senderName || "",
+    time: rawTime || ""
+  };
+}
+
 function buildProfile(userPayload, t) {
   const user = unwrapCurrentUser(userPayload);
   const name = fullNameOf(user, t("fallbackName"));
@@ -70,6 +110,14 @@ function buildProfile(userPayload, t) {
   if (avatar && photos.length === 0) {
     photos.push(avatar);
   }
+  const rawReceivedGifts =
+    user.received_gifts ??
+    user.gifts_received ??
+    user.receivedGifts ??
+    [];
+  const receivedGifts = Array.isArray(rawReceivedGifts)
+    ? rawReceivedGifts.map(mapGiftItem).filter(Boolean)
+    : [];
 
   return {
     id: user.id ?? "",
@@ -82,7 +130,8 @@ function buildProfile(userPayload, t) {
     gender: user.gender ?? "",
     memberSince: formatMemberSince(user.created_at, ""),
     interests,
-    photos
+    photos,
+    receivedGifts
   };
 }
 
@@ -257,6 +306,7 @@ export default function ProfilePage() {
   const currentUser = useAppSelector(selectCurrentUser);
   const profile = buildProfile(currentUser, t);
   const photos = profile.photos;
+  const receivedGifts = profile.receivedGifts;
   const tags = profile.interests;
   const stats = [
     {
@@ -318,12 +368,12 @@ export default function ProfilePage() {
           </div>
         </article>
 
-        {photos.length > 0 ? (
-          <article className="profile-photos-panel">
-            <h2>
-              <Images size={20} />
-              {t("photosHeading")}
-            </h2>
+        <article className={`profile-photos-panel ${photos.length === 0 ? "compact-empty" : ""}`}>
+          <h2>
+            <Images size={20} />
+            {t("photosHeading")}
+          </h2>
+          {photos.length > 0 ? (
             <div className="profile-photos-grid">
               {photos.map((photo, index) => (
                 <div className={index === 0 ? "main-photo" : ""} key={`profile-photo-${index}`}>
@@ -337,8 +387,34 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
-          </article>
-        ) : null}
+          ) : (
+            <p className="profile-section-empty">{t("emptyPhotos")}</p>
+          )}
+        </article>
+
+        <article className={`profile-received-gifts-panel ${receivedGifts.length === 0 ? "compact-empty" : ""}`}>
+          <h2>
+            <Gift size={20} />
+            {t("giftsReceivedHeading")}
+          </h2>
+          {receivedGifts.length > 0 ? (
+            <div className="profile-received-gifts-list">
+              {receivedGifts.map((gift, index) => (
+                <div className="profile-received-gift" key={`profile-received-gift-${index}`}>
+                  <span className="profile-received-gift-icon" aria-hidden="true">
+                    {gift.icon}
+                  </span>
+                  <div>
+                    <strong>{gift.from ? t("fromPrefix", { name: gift.from }) : t("emptyField")}</strong>
+                    {gift.time ? <small>{gift.time}</small> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="profile-section-empty">{t("emptyReceivedGifts")}</p>
+          )}
+        </article>
       </section>
 
       {isEditOpen ? (

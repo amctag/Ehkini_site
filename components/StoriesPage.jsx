@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Image as ImageIcon, Sparkles, Video } from "lucide-react";
+import { ArrowLeft, Camera, Image as ImageIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import DashboardShell from "./DashboardShell";
@@ -11,7 +11,6 @@ export default function StoriesPage() {
 
   function getActionIcon(name) {
     if (name === "image") return ImageIcon;
-    if (name === "video") return Video;
     return Camera;
   }
 

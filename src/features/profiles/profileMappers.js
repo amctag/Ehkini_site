@@ -91,6 +91,10 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     occupation: user?.occupation ?? "",
     education: user?.education ?? "",
     memberSince: formatMemberSince(user?.created_at) || (user?.memberSince ?? ""),
+    friendshipStatus: user?.friendship_status ?? user?.friendshipStatus ?? null,
+    friendshipId: user?.friendship_id ?? user?.friendshipId ?? null,
+    canCancel: Boolean(user?.can_cancel ?? user?.canCancel),
+    canRespond: Boolean(user?.can_respond ?? user?.canRespond),
     interests,
     photos: mapPhotos(user, avatar)
   };

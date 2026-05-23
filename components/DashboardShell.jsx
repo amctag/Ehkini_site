@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { selectCurrentUser } from "@/src/features/auth/authSlice";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import Sidebar from "./Sidebar";
 
 function NotificationsPopup({ open, onClose }) {
@@ -94,6 +96,25 @@ function NotificationsPopup({ open, onClose }) {
 function Topbar({ title, subtitle, notificationCount, onOpenMobileSidebar }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const t = useTranslations("dashboard");
+  const currentUserPayload = useAppSelector(selectCurrentUser);
+  const currentUser =
+    currentUserPayload?.user ?? currentUserPayload?.data?.user ?? currentUserPayload?.data ?? currentUserPayload ?? {};
+  const topbarProfileImage =
+    currentUser?.profile_image_url ??
+    currentUser?.profile_image ??
+    currentUser?.avatar_url ??
+    currentUser?.avatar ??
+    "";
+  const hasTopbarProfileImage =
+    typeof topbarProfileImage === "string" &&
+    topbarProfileImage.trim().length > 0 &&
+    (topbarProfileImage.startsWith("http") || topbarProfileImage.startsWith("/"));
+  const topbarProfileName =
+    String(currentUser?.full_name ?? "").trim() ||
+    [currentUser?.first_name, currentUser?.last_name].filter(Boolean).join(" ").trim() ||
+    String(currentUser?.name ?? "").trim() ||
+    "User";
+  const topbarProfileInitial = topbarProfileName.charAt(0).toUpperCase() || "U";
 
   useEffect(() => {
     if (!isNotificationsOpen) return;
@@ -133,13 +154,20 @@ function Topbar({ title, subtitle, notificationCount, onOpenMobileSidebar }) {
             <Bell size={25} />
             <span>{notificationCount}</span>
           </button>
-          <Link href="/profile" aria-label={t("profileAria")}>
-            <Image
-              width={40}
-              height={40}
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=96&q=80"
-              alt={t("profileImageAlt")}
-            />
+          <Link href="/profile" aria-label={t("profileAria")} className="topbar-profile-link">
+            {hasTopbarProfileImage ? (
+              <Image
+                width={40}
+                height={40}
+                src={topbarProfileImage}
+                alt={t("profileImageAlt")}
+                unoptimized
+              />
+            ) : (
+              <span className="topbar-profile-fallback" aria-label={t("profileImageAlt")}>
+                {topbarProfileInitial}
+              </span>
+            )}
           </Link>
         </div>
       </header>

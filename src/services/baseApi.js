@@ -49,6 +49,6 @@ export const baseQuery = useMock ? mockBaseQuery : realBaseQuery;
 export const api = createApi({
   reducerPath: "api",
   baseQuery,
-  tagTypes: ["User", "Profile", "Discover", "Messages", "Friends", "Gifts", "Wallet"],
+  tagTypes: ["User", "UserSearch", "Profile", "Discover", "Messages", "Friends", "Gifts", "Wallet"],
   endpoints: () => ({})
 });

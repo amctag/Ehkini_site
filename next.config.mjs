@@ -25,6 +25,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "amctag-ehkini.38f0fz.easypanel.host"
+      },
+      {
+        protocol: "https",
+        hostname: "ik.imagekit.io"
       }
     ]
   },

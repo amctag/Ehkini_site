@@ -162,7 +162,7 @@ export default function StoriesPage() {
     }
 
     try {
-      const response = await createStory({ file: selectedMedia.file }).unwrap();
+      const response = await createStory({ file: selectedMedia.file, type: "image" }).unwrap();
       setStoryStatus(String(response?.message ?? t("publishSuccess")));
       clearSelectedMedia();
     } catch (error) {

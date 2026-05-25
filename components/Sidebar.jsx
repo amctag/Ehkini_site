@@ -229,11 +229,16 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
   }, [dispatch, isSearchOpen, recentNameById, recentSearchRows, showingSearchResults, triggerSearchUsersByName]);
 
   async function handlePickUser(user) {
+    const userId = user?.user_id ?? user?.id ?? user?.searched_user_id ?? user?.target_user_id ?? null;
     dispatch(cacheRecentUserName(user));
     dispatch(upsertRecentSearchRow(user));
     setSearchQuery("");
     setDebouncedQuery("");
     setIsSearchOpen(false);
+    if (userId !== null && userId !== undefined && String(userId).trim() !== "") {
+      router.push(`/profile-view/${String(userId).trim()}`);
+      onCloseMobile?.();
+    }
 
     try {
       await saveUserSearchClick(user).unwrap();

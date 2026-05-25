@@ -6,15 +6,35 @@ function interestLabel(interest) {
 const defaultStoryImage =
   "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=220&q=85";
 
-function pickImage(...values) {
-  const image = values.find((value) => typeof value === "string" && value.trim());
+function normalizeImageUrl(value) {
+  const image = String(value ?? "").trim();
   if (!image) return "";
-  if (image.startsWith("http") || image.startsWith("/")) return image;
+
+  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
+    return image;
+  }
+
+  if (image.startsWith("//")) {
+    return `https:${image}`;
+  }
+
+  if (/^[\w.-]+\.[a-z]{2,}\/.+/i.test(image)) {
+    return `https://${image}`;
+  }
+
+  return `/${image.replace(/^\/+/, "")}`;
+}
+
+function pickImage(...values) {
+  for (const value of values) {
+    const normalized = normalizeImageUrl(value);
+    if (normalized) return normalized;
+  }
   return "";
 }
 
 function pickStoryOwner(story) {
-  return story?.user ?? story?.owner ?? story?.author ?? {};
+  return story?.user ?? story?.owner ?? story?.author ?? story?.profile ?? {};
 }
 
 export function mapStoryToDiscoverCard(story) {
@@ -30,24 +50,58 @@ export function mapStoryToDiscoverCard(story) {
         "User"
     ).trim() || "User";
 
-  const image =
+  // Prefer story media fields first. Some APIs use `image` for owner/profile photo.
+  const storyImage =
     pickImage(
-      story?.image,
-      story?.image_url,
       story?.story_image_url,
       story?.thumbnail_url,
       story?.media_url,
       story?.media?.url,
+      story?.media?.image_url,
+      story?.media?.image,
+      story?.media?.path,
+      story?.file_url,
+      story?.file?.url,
+      story?.url,
+      story?.image_url,
+      story?.image,
+      story?.photo,
+      story?.photo_url,
+      story?.attachment_url,
+      story?.attachment?.url,
+      story?.content_url,
+      story?.content?.url,
+      owner?.story_image_url,
+      owner?.story?.url,
+      owner?.story?.image_url,
+      owner?.story?.image,
+      owner?.media_url,
+      owner?.media?.url,
+      owner?.image_url,
       owner?.profile_image_url,
       owner?.avatar_url,
       owner?.avatar,
       owner?.image
     ) || defaultStoryImage;
 
+  const avatar =
+    pickImage(
+      owner?.profile_image_url,
+      owner?.avatar_url,
+      owner?.avatar,
+      owner?.image,
+      owner?.image_url,
+      story?.user_image_url,
+      story?.user_avatar_url
+    ) || storyImage;
+
   return {
     id: story?.id ?? story?.story_id ?? owner?.id ?? name,
+    userId: owner?.id ?? story?.user_id ?? null,
+    createdAt: story?.created_at ?? story?.createdAt ?? null,
     name,
-    image
+    image: storyImage,
+    avatar
   };
 }
 
@@ -81,7 +135,39 @@ export function mapUsersResponse(response) {
   return rows.map(mapUserToDiscoverCard);
 }
 
+function flattenStoriesRows(rows) {
+  const flattened = [];
+
+  rows.forEach((row) => {
+    const groupedStories = Array.isArray(row?.stories) ? row.stories : null;
+    if (groupedStories?.length) {
+      groupedStories.forEach((story) => {
+        flattened.push({
+          ...story,
+          user: story?.user ?? row?.user ?? row?.owner ?? row?.author ?? row?.profile ?? null
+        });
+      });
+      return;
+    }
+
+    flattened.push(row);
+  });
+
+  return flattened;
+}
+
 export function mapStoriesResponse(response) {
-  const rows = Array.isArray(response) ? response : (response?.data ?? response?.stories ?? []);
-  return rows.map(mapStoryToDiscoverCard);
+  const rows =
+    (Array.isArray(response) && response) ||
+    (Array.isArray(response?.data) && response.data) ||
+    (Array.isArray(response?.stories) && response.stories) ||
+    (Array.isArray(response?.response) && response.response) ||
+    (Array.isArray(response?.results) && response.results) ||
+    (Array.isArray(response?.data?.data) && response.data.data) ||
+    (Array.isArray(response?.data?.stories) && response.data.stories) ||
+    (Array.isArray(response?.data?.response) && response.data.response) ||
+    (Array.isArray(response?.payload?.stories) && response.payload.stories) ||
+    [];
+
+  return flattenStoriesRows(rows).map(mapStoryToDiscoverCard);
 }

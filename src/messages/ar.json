@@ -397,6 +397,14 @@
       "message": "Message"
     },
     "addFriend": "Add Friend",
+    "alreadyFriend": "Already Friend",
+    "requestSent": "Sent",
+    "cancelRequest": "Cancel request",
+    "sendingRequest": "Sending...",
+    "cancelingRequest": "Canceling...",
+    "alreadySentPopup": "Request already sent.",
+    "requestActionError": "Could not process friend request. Please try again.",
+    "dismissPopup": "OK",
     "actions": {
       "removeFriend": "Remove Friend",
       "block": "Block",

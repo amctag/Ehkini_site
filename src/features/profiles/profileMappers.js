@@ -39,6 +39,29 @@ function toBoolean(value) {
   return ["1", "true", "yes", "y", "on"].includes(normalized);
 }
 
+function normalizeFriendshipStatus(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function isFriendStatus(status) {
+  return status === "friend" || status === "friends" || status === "accepted" || status === "is_friends";
+}
+
+function isSentStatus(status) {
+  return (
+    status === "pending" ||
+    status === "pending_sent" ||
+    status === "sent" ||
+    status === "request_sent" ||
+    status === "awaiting_response" ||
+    status === "outgoing_pending" ||
+    status === "pending_outgoing"
+  );
+}
+
 function formatMemberSince(value) {
   if (!value) return "";
 
@@ -87,7 +110,12 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     user?.friendshipStatus ??
     user?.relationship_status ??
     user?.relation_status ??
+    user?.request_status ??
+    user?.friend_request_status ??
+    user?.friendship?.status ??
+    user?.request?.status ??
     null;
+  const normalizedFriendshipStatus = normalizeFriendshipStatus(friendshipStatus);
   const friendshipId =
     user?.friendship_id ??
     user?.friendshipId ??
@@ -98,14 +126,19 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     null;
   const isFriend =
     toBoolean(user?.is_friend ?? user?.isFriend ?? user?.friends_with_me) ||
-    String(friendshipStatus ?? "").trim().toLowerCase() === "accepted";
+    isFriendStatus(normalizedFriendshipStatus);
   const isRequestSent = toBoolean(
     user?.request_sent ??
       user?.is_request_sent ??
       user?.sent_request ??
-      user?.has_pending_request
+      user?.has_pending_request ??
+      user?.can_cancel ??
+      user?.canCancel ??
+      user?.friendship?.is_request_sent ??
+      user?.request?.is_sent
   );
-  const canCancel = toBoolean(user?.can_cancel ?? user?.canCancel) || isRequestSent;
+  const hasSentStatus = isSentStatus(normalizedFriendshipStatus);
+  const canCancel = toBoolean(user?.can_cancel ?? user?.canCancel) || isRequestSent || hasSentStatus;
 
   return {
     ...fallbackProfile,
@@ -126,7 +159,7 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     friendshipStatus,
     friendshipId,
     isFriend,
-    isRequestSent,
+    isRequestSent: !isFriend && (isRequestSent || hasSentStatus),
     canCancel,
     canRespond: Boolean(user?.can_respond ?? user?.canRespond),
     interests,

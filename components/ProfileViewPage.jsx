@@ -92,7 +92,9 @@ function isSentStatus(status) {
     status === "pending_sent" ||
     status === "sent" ||
     status === "request_sent" ||
-    status === "awaiting_response"
+    status === "awaiting_response" ||
+    status === "outgoing_pending" ||
+    status === "pending_outgoing"
   );
 }
 
@@ -209,7 +211,7 @@ export default function ProfileViewPage({ slug }) {
               type="button"
               className="friendship-state sent"
               disabled={!canCancel || isCancelingFriendRequest}
-              aria-label={t("cancelRequest")}
+              aria-label={t("requestSent")}
               onClick={async () => {
                 if (!receiverId) return;
                 const payload = friendshipId ? { friendship_id: friendshipId } : { receiver_id: receiverId };
@@ -228,7 +230,7 @@ export default function ProfileViewPage({ slug }) {
                 }
               }}
             >
-              {isCancelingFriendRequest ? `${t("cancelRequest")}...` : t("cancelRequest")}
+              {isCancelingFriendRequest ? `${t("requestSent")}...` : t("requestSent")}
             </button>
           ) : null}
           {!isFriend && !isSent ? (

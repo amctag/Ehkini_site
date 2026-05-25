@@ -3,12 +3,15 @@
 import { Gift, MessageCircle, MoreVertical, Phone, Search, UserPlus, Users, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  useCancelFriendRequestMutation,
   useGetFriendSuggestionsQuery,
   useGetFriendsQuery,
   useRemoveFriendMutation,
+  useSendFriendRequestMutation,
   useSearchFriendsQuery
 } from "@/src/features/friends/friendsApi";
 import { useBlockUserMutation, useReportUserMutation } from "@/src/features/users/usersApi";
@@ -30,7 +33,42 @@ function formatConnectedDate(value, t) {
   });
 }
 
-function FriendCard({ friend, pendingAction, onRemoveFriend, onBlockUser, onReportUser }) {
+function normalizeFriendshipStatus(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function isFriendStatus(status) {
+  return status === "friend" || status === "friends" || status === "accepted" || status === "is_friends";
+}
+
+function isSentStatus(status) {
+  return (
+    status === "pending" ||
+    status === "pending_sent" ||
+    status === "sent" ||
+    status === "request_sent" ||
+    status === "awaiting_response" ||
+    status === "outgoing_pending" ||
+    status === "pending_outgoing"
+  );
+}
+
+function toBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+  return ["1", "true", "yes", "y", "on"].includes(normalized);
+}
+
+function suggestionStateKey(suggestion) {
+  return String(suggestion?.receiverId ?? suggestion?.profileId ?? suggestion?.id ?? "").trim();
+}
+
+function FriendCard({ friend, pendingAction, onRemoveFriend, onBlockUser, onReportUser, onOpenProfile }) {
   const t = useTranslations("friends");
   const profileHref = `/profile-view/${friend.userId ?? friend.id}`;
   const status = friend.isOnline ? t("friend.online") : friend.status;
@@ -70,8 +108,14 @@ function FriendCard({ friend, pendingAction, onRemoveFriend, onBlockUser, onRepo
     };
   }, [isMenuOpen]);
 
+  function handleCardClick(event) {
+    const interactiveTarget = event.target.closest("button, a, input, textarea, select, [role='menuitem']");
+    if (interactiveTarget) return;
+    onOpenProfile?.();
+  }
+
   return (
-    <article className="friend-card">
+    <article className="friend-card friend-card-clickable" onClick={handleCardClick}>
       <div className="friend-card-header">
         <Link
           className="friend-profile-link"
@@ -185,9 +229,39 @@ function buildSuggestionCard(suggestion, index, t) {
       .join("") || "U";
   const tones = ["coral", "mint", "blue"];
   const tone = source.tone ?? tones[index % tones.length];
+  const profileId =
+    source.userId ??
+    source.user_id ??
+    source.receiver_id ??
+    source.friend_id ??
+    source.id ??
+    null;
+  const normalizedStatus = normalizeFriendshipStatus(
+    source.friendshipStatus ??
+      source.friendship_status ??
+      source.relationship_status ??
+      source.request_status ??
+      source.friend_request_status ??
+      source.status
+  );
+  const isFriend =
+    toBoolean(source.isFriend ?? source.is_friend ?? source.friends_with_me) || isFriendStatus(normalizedStatus);
+  const isRequestSentRaw = toBoolean(
+    source.isRequestSent ??
+      source.is_request_sent ??
+      source.request_sent ??
+      source.sent_request ??
+      source.has_pending_request ??
+      source.canCancel ??
+      source.can_cancel
+  );
+  const isRequestSent = !isFriend && (isRequestSentRaw || isSentStatus(normalizedStatus));
 
   return {
-    id: source.id ?? source.userId ?? source.user_id ?? `suggested-${index}`,
+    id: source.userId ?? source.user_id ?? source.id ?? `suggested-${index}`,
+    profileId,
+    receiverId: profileId,
+    friendshipId: source.friendshipId ?? source.friendship_id ?? null,
     name,
     location: source.location ?? "",
     mutual:
@@ -197,16 +271,27 @@ function buildSuggestionCard(suggestion, index, t) {
         : ""),
     initials: source.initials ?? initials,
     tone,
-    image: source.image ?? source.avatar ?? source.profile_image_url ?? ""
+    image: source.image ?? source.avatar ?? source.profile_image_url ?? "",
+    isFriend,
+    isRequestSent
   };
 }
 
-function SuggestedFriendCard({ suggestion }) {
+function SuggestedFriendCard({ suggestion, onOpenProfile, onToggleRequest, pendingState, resolvedState }) {
   const t = useTranslations("friends");
   const hasImage = typeof suggestion.image === "string" && suggestion.image.trim().length > 0;
+  const isFriend = resolvedState?.isFriend ?? false;
+  const isSent = resolvedState?.isSent ?? false;
+  const isBusy = pendingState?.suggestionKey === suggestionStateKey(suggestion) && pendingState?.inFlight;
+
+  function handleCardClick(event) {
+    const interactiveTarget = event.target.closest("button, a, input, textarea, select");
+    if (interactiveTarget) return;
+    onOpenProfile?.();
+  }
 
   return (
-    <article className="suggested-card">
+    <article className="suggested-card suggested-card-clickable" onClick={handleCardClick}>
       <div className={`suggested-avatar ${suggestion.tone}`}>
         {hasImage ? (
           <Image src={suggestion.image} alt={suggestion.name} width={50} height={50} unoptimized />
@@ -219,9 +304,17 @@ function SuggestedFriendCard({ suggestion }) {
         <p>{suggestion.location}</p>
         <small>{suggestion.mutual}</small>
       </div>
-      <button type="button">
+      <button
+        type="button"
+        className={isSent ? "sent" : ""}
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleRequest?.(suggestion);
+        }}
+        disabled={isFriend || isBusy}
+      >
         <UserPlus size={16} />
-        {t("addFriend")}
+        {isFriend ? t("alreadyFriend") : isSent ? (isBusy ? t("cancelingRequest") : t("requestSent")) : (isBusy ? t("sendingRequest") : t("addFriend"))}
       </button>
     </article>
   );
@@ -229,10 +322,16 @@ function SuggestedFriendCard({ suggestion }) {
 
 export default function FriendsPage() {
   const t = useTranslations("friends");
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
+  const [suggestionOverrides, setSuggestionOverrides] = useState({});
+  const [pendingSuggestionAction, setPendingSuggestionAction] = useState(null);
+  const [requestPopupMessage, setRequestPopupMessage] = useState("");
   const [removeFriend] = useRemoveFriendMutation();
+  const [sendFriendRequest] = useSendFriendRequestMutation();
+  const [cancelFriendRequest] = useCancelFriendRequestMutation();
   const [blockUser] = useBlockUserMutation();
   const [reportUser] = useReportUserMutation();
 
@@ -265,6 +364,15 @@ export default function FriendsPage() {
   const suggestions = Array.isArray(suggestedFriendsData)
     ? suggestedFriendsData.map((suggestion, index) => buildSuggestionCard(suggestion, index, t))
     : [];
+  const friendIdSet = useMemo(
+    () =>
+      new Set(
+        allFriends
+          .map((friend) => String(friend?.userId ?? friend?.user_id ?? friend?.id ?? "").trim())
+          .filter(Boolean)
+      ),
+    [allFriends]
+  );
 
   function resolveFriendUserId(friend) {
     const raw = friend?.userId ?? friend?.user_id ?? friend?.id ?? null;
@@ -275,6 +383,87 @@ export default function FriendsPage() {
 
   function resolveFriendKey(friend) {
     return String(friend?.userId ?? friend?.user_id ?? friend?.id ?? friend?.name ?? "");
+  }
+
+  function openProfileById(id) {
+    const profileId = String(id ?? "").trim();
+    if (!profileId) return;
+    router.push(`/profile-view/${profileId}`);
+  }
+
+  function resolveSuggestionState(suggestion) {
+    const key = suggestionStateKey(suggestion);
+    const override = suggestionOverrides[key];
+    if (override) {
+      return {
+        isFriend: Boolean(override.isFriend),
+        isSent: Boolean(override.isSent),
+        friendshipId: override.friendshipId ?? null
+      };
+    }
+
+    const receiverId = String(suggestion?.receiverId ?? suggestion?.profileId ?? suggestion?.id ?? "").trim();
+    const isFriend = Boolean(suggestion?.isFriend) || (receiverId ? friendIdSet.has(receiverId) : false);
+    return {
+      isFriend,
+      isSent: !isFriend && Boolean(suggestion?.isRequestSent),
+      friendshipId: suggestion?.friendshipId ?? null
+    };
+  }
+
+  const visibleSuggestions = suggestions.filter((suggestion) => {
+    const state = resolveSuggestionState(suggestion);
+    return !state.isSent;
+  });
+
+  async function handleToggleSuggestedRequest(suggestion) {
+    const suggestionKey = suggestionStateKey(suggestion);
+    if (!suggestionKey) return;
+
+    const receiverId = suggestion?.receiverId ?? suggestion?.profileId ?? suggestion?.id ?? null;
+    if (receiverId === null || receiverId === undefined || String(receiverId).trim() === "") return;
+
+    const state = resolveSuggestionState(suggestion);
+    if (state.isFriend) return;
+
+    setPendingSuggestionAction({ suggestionKey, inFlight: true });
+    try {
+      if (state.isSent) {
+        const payload = state.friendshipId ? { friendship_id: state.friendshipId } : { receiver_id: receiverId };
+        await cancelFriendRequest(payload).unwrap();
+        setSuggestionOverrides((current) => ({
+          ...current,
+          [suggestionKey]: { isFriend: false, isSent: false, friendshipId: null }
+        }));
+      } else {
+        const response = await sendFriendRequest({ receiver_id: receiverId }).unwrap();
+        const nextFriendshipId = response?.friendship_id ?? response?.data?.friendship_id ?? null;
+        setSuggestionOverrides((current) => ({
+          ...current,
+          [suggestionKey]: { isFriend: false, isSent: true, friendshipId: nextFriendshipId }
+        }));
+      }
+    } catch (error) {
+      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      const normalizedMessage = message.toLowerCase();
+      const isAlreadySent =
+        normalizedMessage.includes("already") && normalizedMessage.includes("sent");
+      if (isAlreadySent) {
+        setSuggestionOverrides((current) => ({
+          ...current,
+          [suggestionKey]: {
+            isFriend: false,
+            isSent: true,
+            friendshipId: state.friendshipId ?? null
+          }
+        }));
+        setRequestPopupMessage(t("alreadySentPopup"));
+      } else {
+        setRequestPopupMessage(message || t("requestActionError"));
+      }
+    } finally {
+      setPendingSuggestionAction((current) => (current?.suggestionKey === suggestionKey ? null : current));
+    }
   }
 
   async function runFriendAction(action, friend, request) {
@@ -314,6 +503,14 @@ export default function FriendsPage() {
   return (
     <DashboardShell activePageKey="friends" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="friends-page">
+        {requestPopupMessage ? (
+          <div className="friends-request-popup" role="alertdialog" aria-modal="false">
+            <p>{requestPopupMessage}</p>
+            <button type="button" onClick={() => setRequestPopupMessage("")}>
+              {t("dismissPopup")}
+            </button>
+          </div>
+        ) : null}
         <div className="friends-toolbar">
           <div className="friends-title-row">
             <SectionTitle icon={Users} iconProps={{ size: 24 }} title={t("myFriends")} />
@@ -359,17 +556,25 @@ export default function FriendsPage() {
                 onRemoveFriend={handleRemoveFriend}
                 onBlockUser={handleBlockUser}
                 onReportUser={handleReportUser}
+                onOpenProfile={() => openProfileById(friend.userId ?? friend.user_id ?? friend.id)}
               />
             ))}
           </div>
         ) : null}
 
-        {suggestions.length > 0 ? (
+        {visibleSuggestions.length > 0 ? (
           <>
             <h2 className="suggested-heading">{t("suggestedHeading")}</h2>
             <div className="suggested-grid">
-              {suggestions.map((suggestion) => (
-                <SuggestedFriendCard suggestion={suggestion} key={suggestion.id ?? suggestion.name} />
+              {visibleSuggestions.map((suggestion) => (
+                <SuggestedFriendCard
+                  suggestion={suggestion}
+                  key={suggestion.id ?? suggestion.name}
+                  onOpenProfile={() => openProfileById(suggestion.profileId)}
+                  onToggleRequest={handleToggleSuggestedRequest}
+                  pendingState={pendingSuggestionAction}
+                  resolvedState={resolveSuggestionState(suggestion)}
+                />
               ))}
             </div>
           </>

@@ -3402,6 +3402,39 @@ a {
   box-shadow: 0 3px 7px rgba(17, 24, 39, 0.12);
 }
 
+.friends-request-popup {
+  position: sticky;
+  top: 8px;
+  z-index: 40;
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background: #fff7ed;
+}
+
+.friends-request-popup p {
+  margin: 0;
+  color: #9a3412;
+  font-size: 14px;
+}
+
+.friends-request-popup button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  color: #9a3412;
+  background: #ffedd5;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 .friends-title-row {
   display: flex;
   align-items: center;
@@ -3508,6 +3541,10 @@ a {
   border: 1px solid #dedee4;
   border-radius: 12px;
   background: #fff;
+}
+
+.friend-card-clickable {
+  cursor: pointer;
 }
 
 .friend-card-header {
@@ -3727,6 +3764,10 @@ a {
   background: #fff;
 }
 
+.suggested-card-clickable {
+  cursor: pointer;
+}
+
 .suggested-avatar {
   width: 64px;
   height: 64px;
@@ -3769,6 +3810,12 @@ a {
   font: inherit;
   font-size: 14px;
   cursor: pointer;
+}
+
+.suggested-card button.sent {
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
 }
 
 .profile-page {

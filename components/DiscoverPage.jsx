@@ -14,12 +14,14 @@ import DashboardShell from "./DashboardShell";
 import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";
 
-function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
+function StoryViewer({ storyGroup, activeIndex, onClose, onPrevious, onNext }) {
   const t = useTranslations("discover");
 
-  if (activeIndex === null) return null;
+  if (!storyGroup || activeIndex === null) return null;
 
+  const storyItems = storyGroup.stories;
   const activeStory = storyItems[activeIndex];
+  if (!activeStory) return null;
 
   return (
     <div className="story-viewer-overlay" role="presentation" onClick={onClose}>
@@ -34,6 +36,7 @@ function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
           src={activeStory.image}
           alt={t("storyImageAlt", { name: activeStory.name })}
           fill
+          unoptimized
           sizes="(max-width: 620px) 96vw, 420px"
           className="story-viewer-image"
         />
@@ -59,9 +62,15 @@ function StoryViewer({ storyItems, activeIndex, onClose, onPrevious, onNext }) {
           <header className="story-viewer-header">
             <div className="story-viewer-account">
               <span className="story-viewer-avatar">
-                <Image src={activeStory.image} alt={activeStory.name} fill sizes="32px" />
+                <Image
+                  src={storyGroup.avatar ?? activeStory.avatar ?? activeStory.image}
+                  alt={storyGroup.name}
+                  fill
+                  unoptimized
+                  sizes="32px"
+                />
               </span>
-              <strong>{activeStory.name}</strong>
+              <strong>{storyGroup.name}</strong>
               <small>{t("storyViewer.timeAgo")}</small>
             </div>
 
@@ -99,47 +108,91 @@ function Stories() {
   const router = useRouter();
   const t = useTranslations("discover");
   const { data: storyItems = [] } = useGetDiscoverStoriesQuery();
+  const [activeGroupIndex, setActiveGroupIndex] = useState(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
 
+  const storyGroups = useMemo(() => {
+    const grouped = new Map();
+
+    storyItems.forEach((story, index) => {
+      const keyBase = String(story?.userId ?? "").trim();
+      const fallbackKey = `${String(story?.name ?? "").trim()}|${String(story?.avatar ?? "").trim()}`;
+      const groupKey = keyBase || fallbackKey || `story-user-${index}`;
+
+      if (!grouped.has(groupKey)) {
+        grouped.set(groupKey, {
+          id: keyBase || groupKey,
+          name: story?.name ?? "User",
+          avatar: story?.avatar ?? story?.image ?? "",
+          stories: []
+        });
+      }
+
+      grouped.get(groupKey).stories.push(story);
+    });
+
+    const groups = [...grouped.values()].map((group) => ({
+      ...group,
+      stories: [...group.stories].sort((a, b) => {
+        const dateA = new Date(a?.createdAt ?? 0).getTime();
+        const dateB = new Date(b?.createdAt ?? 0).getTime();
+        return dateA - dateB;
+      })
+    }));
+
+    return groups.sort((a, b) => {
+      const oldestA = new Date(a.stories[0]?.createdAt ?? 0).getTime();
+      const oldestB = new Date(b.stories[0]?.createdAt ?? 0).getTime();
+      return oldestA - oldestB;
+    });
+  }, [storyItems]);
+
+  const activeStoryGroup = activeGroupIndex === null ? null : (storyGroups[activeGroupIndex] ?? null);
+
   useEffect(() => {
-    if (activeStoryIndex === null) return;
+    if (activeGroupIndex === null) return;
 
     function onEscape(event) {
       if (event.key === "Escape") {
+        setActiveGroupIndex(null);
         setActiveStoryIndex(null);
       }
     }
 
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
-  }, [activeStoryIndex]);
+  }, [activeGroupIndex]);
 
   const showPreviousStory = useCallback(() => {
+    if (!activeStoryGroup?.stories?.length) return;
+
     setActiveStoryIndex((current) => {
       if (current === null) return 0;
-      return (current - 1 + storyItems.length) % storyItems.length;
+      return (current - 1 + activeStoryGroup.stories.length) % activeStoryGroup.stories.length;
     });
-  }, [storyItems.length]);
+  }, [activeStoryGroup]);
 
   const showNextStory = useCallback(() => {
+    if (!activeStoryGroup?.stories?.length) return;
+
     setActiveStoryIndex((current) => {
       if (current === null) return 0;
-      return (current + 1) % storyItems.length;
+      return (current + 1) % activeStoryGroup.stories.length;
     });
-  }, [storyItems.length]);
+  }, [activeStoryGroup]);
 
   useEffect(() => {
-    if (activeStoryIndex === null) return;
+    if (activeStoryIndex === null || activeGroupIndex === null) return;
 
     const timer = window.setTimeout(() => {
       showNextStory();
     }, 5000);
 
     return () => window.clearTimeout(timer);
-  }, [activeStoryIndex, showNextStory]);
+  }, [activeGroupIndex, activeStoryIndex, showNextStory]);
 
   useEffect(() => {
-    if (activeStoryIndex === null) return;
+    if (activeStoryIndex === null || activeGroupIndex === null) return;
 
     function onArrowKeys(event) {
       if (event.key === "ArrowLeft") {
@@ -152,7 +205,12 @@ function Stories() {
 
     window.addEventListener("keydown", onArrowKeys);
     return () => window.removeEventListener("keydown", onArrowKeys);
-  }, [activeStoryIndex, showNextStory, showPreviousStory]);
+  }, [activeGroupIndex, activeStoryIndex, showNextStory, showPreviousStory]);
+
+  function openStoryGroup(index) {
+    setActiveGroupIndex(index);
+    setActiveStoryIndex(0);
+  }
 
   return (
     <>
@@ -172,32 +230,36 @@ function Stories() {
             <span>{t("yourStory")}</span>
           </div>
 
-          {storyItems.map((story, index) => (
-            <div className="story-item" key={story.name}>
+          {storyGroups.map((group, index) => (
+            <div className="story-item" key={group.id ?? `${group.name}-${index}`}>
               <button
                 type="button"
                 className="story-open-button"
-                onClick={() => setActiveStoryIndex(index)}
-                aria-label={t("storyViewer.openAria", { name: story.name })}
+                onClick={() => openStoryGroup(index)}
+                aria-label={t("storyViewer.openAria", { name: group.name })}
               >
                 <Image
                   className="story-image"
-                  src={story.image}
-                  alt={t("storyImageAlt", { name: story.name })}
+                  src={group.avatar || group.stories[0]?.avatar || group.stories[0]?.image}
+                  alt={t("storyImageAlt", { name: group.name })}
                   width={121}
                   height={121}
+                  unoptimized
                 />
               </button>
-              <span>{story.name}</span>
+              <span>{group.name}</span>
             </div>
           ))}
         </div>
       </section>
 
       <StoryViewer
-        storyItems={storyItems}
+        storyGroup={activeStoryGroup}
         activeIndex={activeStoryIndex}
-        onClose={() => setActiveStoryIndex(null)}
+        onClose={() => {
+          setActiveGroupIndex(null);
+          setActiveStoryIndex(null);
+        }}
         onPrevious={showPreviousStory}
         onNext={showNextStory}
       />

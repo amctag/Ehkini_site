@@ -1,6 +1,3 @@
-const fallbackFriendImage =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=180&q=80";
-
 function asArray(response) {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.data)) return response.data;
@@ -32,19 +29,51 @@ function pickName(user) {
   return String(user?.name ?? "User").trim() || "User";
 }
 
-function pickImage(user) {
-  const image =
-    user?.profile_image_url ??
-    user?.profile_image ??
-    user?.avatar_url ??
-    user?.avatar ??
-    "";
+function normalizeImageUrl(value) {
+  const image = String(value ?? "").trim();
+  if (!image) return null;
 
-  if (typeof image === "string" && (image.startsWith("http") || image.startsWith("/"))) {
+  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
     return image;
   }
 
-  return fallbackFriendImage;
+  if (image.startsWith("//")) {
+    return `https:${image}`;
+  }
+
+  // Handle values like `amcserver.com/path/image.jpg`.
+  if (/^[\w.-]+\.[a-z]{2,}\/.+/i.test(image)) {
+    return `https://${image}`;
+  }
+
+  // Handle relative paths like `uploads/avatar.jpg`.
+  return `/${image.replace(/^\/+/, "")}`;
+}
+
+function pickImage(row, user) {
+  const imageCandidates = [
+    user?.profile_image_url,
+    user?.profile_image,
+    user?.avatar_url,
+    user?.avatar,
+    user?.image,
+    user?.photo,
+    row?.profile_image_url,
+    row?.profile_image,
+    row?.avatar_url,
+    row?.avatar,
+    row?.image,
+    row?.photo,
+    row?.friend_image,
+    row?.friend_avatar
+  ];
+
+  for (const candidate of imageCandidates) {
+    const normalized = normalizeImageUrl(candidate);
+    if (normalized) return normalized;
+  }
+
+  return null;
 }
 
 function pickMutualCount(row, user) {
@@ -82,8 +111,8 @@ export function mapFriendRow(row, index = 0) {
     mutualCount,
     connected: row?.connected ?? row?.connected_label ?? "",
     connectedAt,
-    image: pickImage(user),
-    avatar: pickImage(user),
+    image: pickImage(row, user),
+    avatar: pickImage(row, user),
     profile_image_url: user?.profile_image_url ?? row?.profile_image_url ?? null,
     isOnline
   };

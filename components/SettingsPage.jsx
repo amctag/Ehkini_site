@@ -16,6 +16,16 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import {
+  useConfirmPasswordOtpMutation,
+  useConfirmPhoneNewMutation,
+  useGetBlockedUsersQuery,
+  useSendPasswordOtpMutation,
+  useSendPhoneOtpNewMutation,
+  useUnblockUserMutation
+} from "@/src/features/settings/settingsApi";
+import { selectCurrentUser } from "@/src/features/auth/authSlice";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import DashboardShell from "./DashboardShell";
 
 function SectionHeader({ icon: Icon, title, tone }) {
@@ -44,8 +54,35 @@ function resolveSettingsIcon(key) {
   return icons[key] ?? HelpCircle;
 }
 
-function AccountModal({ type, onClose }) {
+function unwrapCurrentUser(payload) {
+  return payload?.user ?? payload?.data?.user ?? payload?.data ?? payload ?? {};
+}
+
+function formatPhoneForSettings(user) {
+  const rawPhone = String(user?.phone ?? user?.phone_number ?? user?.mobile ?? "").trim();
+  if (!rawPhone) return "";
+  const countryCode = String(user?.country_code ?? user?.dial_code ?? "").trim();
+  return countryCode ? `${countryCode} ${rawPhone}` : rawPhone;
+}
+
+function AccountModal({ type, onClose, currentPhone }) {
   const t = useTranslations("settings.modal");
+  const [sendPhoneOtpNew, { isLoading: isSendingPhoneOtp }] = useSendPhoneOtpNewMutation();
+  const [confirmPhoneNew, { isLoading: isConfirmingPhoneOtp }] = useConfirmPhoneNewMutation();
+  const [sendPasswordOtp, { isLoading: isSendingPasswordOtp }] = useSendPasswordOtpMutation();
+  const [confirmPasswordOtp, { isLoading: isConfirmingPasswordOtp }] = useConfirmPasswordOtpMutation();
+  const [newPhone, setNewPhone] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneStatus, setPhoneStatus] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordOtpCode, setPasswordOtpCode] = useState("");
+  const [isPasswordOtpSent, setIsPasswordOtpSent] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordStatus, setPasswordStatus] = useState("");
 
   const config = useMemo(() => {
     if (!type) return null;
@@ -65,6 +102,106 @@ function AccountModal({ type, onClose }) {
   }, [onClose]);
 
   if (!type || !config) return null;
+
+  async function handleSendPhoneOtp() {
+    const phone = String(newPhone ?? "").trim();
+    if (!phone) {
+      setPhoneError("Please enter a phone number.");
+      return;
+    }
+
+    setPhoneError("");
+    setPhoneStatus("");
+    try {
+      const response = await sendPhoneOtpNew({ phone }).unwrap();
+      setIsOtpSent(true);
+      setPhoneStatus(String(response?.message ?? "OTP sent to your new phone number."));
+    } catch (error) {
+      const message =
+        error?.data?.message ??
+        error?.error ??
+        "Could not send OTP. Please try again.";
+      setPhoneError(String(message));
+    }
+  }
+
+  async function handleConfirmPhoneOtp() {
+    const phone = String(newPhone ?? "").trim();
+    const otp = String(otpCode ?? "").trim();
+    if (!phone || !otp) {
+      setPhoneError("Please enter phone number and OTP code.");
+      return;
+    }
+
+    setPhoneError("");
+    setPhoneStatus("");
+    try {
+      const response = await confirmPhoneNew({ phone, otp }).unwrap();
+      setPhoneStatus(String(response?.message ?? "Phone number updated."));
+      onClose();
+    } catch (error) {
+      const message =
+        error?.data?.message ??
+        error?.error ??
+        "Could not confirm OTP. Please try again.";
+      setPhoneError(String(message));
+    }
+  }
+
+  async function handleSendPasswordOtp() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Please fill all password fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+
+    setPasswordError("");
+    setPasswordStatus("");
+    try {
+      const response = await sendPasswordOtp({
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword
+      }).unwrap();
+      setIsPasswordOtpSent(true);
+      setPasswordStatus(String(response?.message ?? "OTP sent for password change."));
+    } catch (error) {
+      const message =
+        error?.data?.message ??
+        error?.error ??
+        "Could not send password OTP. Please try again.";
+      setPasswordError(String(message));
+    }
+  }
+
+  async function handleConfirmPasswordOtp() {
+    if (!passwordOtpCode.trim()) {
+      setPasswordError("Please enter OTP code.");
+      return;
+    }
+
+    setPasswordError("");
+    setPasswordStatus("");
+    try {
+      const response = await confirmPasswordOtp({
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirmation: confirmPassword,
+        otp: passwordOtpCode
+      }).unwrap();
+      setPasswordStatus(String(response?.message ?? "Password updated successfully."));
+      onClose();
+    } catch (error) {
+      const message =
+        error?.data?.message ??
+        error?.error ??
+        "Could not confirm password OTP. Please try again.";
+      setPasswordError(String(message));
+    }
+  }
 
   return (
     <div className="settings-modal-overlay" role="presentation" onClick={onClose}>
@@ -86,26 +223,124 @@ function AccountModal({ type, onClose }) {
         </header>
 
         <div className="settings-account-modal-body">
-          {config.fields.map((field) => (
-            <label className="settings-account-field" key={field.label}>
-              <span>{field.label}</span>
-              <input
-                type={field.type}
-                defaultValue={field.defaultValue}
-                placeholder={field.placeholder}
-                readOnly={field.readOnly}
-              />
-            </label>
-          ))}
+          {type === "phone" ? (
+            <>
+              <label className="settings-account-field">
+                <span>{config.fields?.[0]?.label ?? "Current Phone"}</span>
+                <input type="text" value={currentPhone || config.fields?.[0]?.defaultValue || ""} readOnly />
+              </label>
+              <label className="settings-account-field">
+                <span>{config.fields?.[1]?.label ?? "New Phone Number"}</span>
+                <input
+                  type="tel"
+                  placeholder={config.fields?.[1]?.placeholder ?? "Enter new phone number"}
+                  value={newPhone}
+                  onChange={(event) => setNewPhone(event.target.value)}
+                />
+              </label>
+              {isOtpSent ? (
+                <label className="settings-account-field">
+                  <span>{t("phone.otpLabel")}</span>
+                  <input
+                    type="text"
+                    placeholder={t("phone.otpPlaceholder")}
+                    value={otpCode}
+                    onChange={(event) => setOtpCode(event.target.value)}
+                  />
+                </label>
+              ) : null}
+              {phoneStatus ? <p>{phoneStatus}</p> : null}
+              {phoneError ? <p className="settings-error-text">{phoneError}</p> : null}
+            </>
+          ) : type === "password" ? (
+            <>
+              <label className="settings-account-field">
+                <span>{config.fields?.[0]?.label ?? "Current Password"}</span>
+                <input
+                  type="password"
+                  placeholder={config.fields?.[0]?.placeholder ?? "Enter current password"}
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                />
+              </label>
+              <label className="settings-account-field">
+                <span>{config.fields?.[1]?.label ?? "New Password"}</span>
+                <input
+                  type="password"
+                  placeholder={config.fields?.[1]?.placeholder ?? "Enter new password"}
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                />
+              </label>
+              <label className="settings-account-field">
+                <span>{config.fields?.[2]?.label ?? "Confirm New Password"}</span>
+                <input
+                  type="password"
+                  placeholder={config.fields?.[2]?.placeholder ?? "Confirm new password"}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+              </label>
+              {isPasswordOtpSent ? (
+                <label className="settings-account-field">
+                  <span>{t("password.otpLabel")}</span>
+                  <input
+                    type="text"
+                    placeholder={t("password.otpPlaceholder")}
+                    value={passwordOtpCode}
+                    onChange={(event) => setPasswordOtpCode(event.target.value)}
+                  />
+                </label>
+              ) : null}
+              {passwordStatus ? <p>{passwordStatus}</p> : null}
+              {passwordError ? <p className="settings-error-text">{passwordError}</p> : null}
+            </>
+          ) : (
+            config.fields.map((field) => (
+              <label className="settings-account-field" key={field.label}>
+                <span>{field.label}</span>
+                <input
+                  type={field.type}
+                  defaultValue={field.defaultValue}
+                  placeholder={field.placeholder}
+                  readOnly={field.readOnly}
+                />
+              </label>
+            ))
+          )}
         </div>
 
         <footer className="settings-account-modal-footer">
           <button type="button" className="settings-account-cancel" onClick={onClose}>
             {t("cancel")}
           </button>
-          <button type="button" className="settings-account-submit" onClick={onClose}>
-            {config.actionLabel}
-          </button>
+          {type === "phone" ? (
+            <button
+              type="button"
+              className="settings-account-submit"
+              onClick={isOtpSent ? handleConfirmPhoneOtp : handleSendPhoneOtp}
+              disabled={isSendingPhoneOtp || isConfirmingPhoneOtp}
+            >
+              {isOtpSent
+                ? (isConfirmingPhoneOtp ? `${t("phone.confirmActionLabel")}...` : t("phone.confirmActionLabel"))
+                : (isSendingPhoneOtp ? `${config.actionLabel}...` : config.actionLabel)}
+            </button>
+          ) : type === "password" ? (
+            <button
+              type="button"
+              className="settings-account-submit"
+              onClick={isPasswordOtpSent ? handleConfirmPasswordOtp : handleSendPasswordOtp}
+              disabled={isSendingPasswordOtp || isConfirmingPasswordOtp}
+            >
+              {isPasswordOtpSent
+                ? (isConfirmingPasswordOtp ? `${t("password.confirmActionLabel")}...` : t("password.confirmActionLabel"))
+                : (isSendingPasswordOtp ? `${t("password.sendOtpActionLabel")}...` : t("password.sendOtpActionLabel"))}
+            </button>
+          ) : (
+            <button type="button" className="settings-account-submit" onClick={onClose}>
+              {config.actionLabel}
+            </button>
+          )}
         </footer>
       </section>
     </div>
@@ -158,7 +393,10 @@ function LanguageModal({ open, onClose }) {
 
 function BlockedUsersModal({ open, onClose }) {
   const t = useTranslations("settings.blockedUsersModal");
-  const users = t.raw("users");
+  const { data: users = [], isLoading, isError } = useGetBlockedUsersQuery(undefined, {
+    skip: !open
+  });
+  const [unblockUser, { isLoading: isUnblocking }] = useUnblockUserMutation();
 
   if (!open) return null;
 
@@ -182,18 +420,37 @@ function BlockedUsersModal({ open, onClose }) {
         </header>
 
         <div className="settings-account-modal-body">
-          {users.length === 0 ? (
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : null}
+          {!isLoading && isError ? (
+            <p>Could not load blocked users.</p>
+          ) : null}
+          {!isLoading && !isError && users.length === 0 ? (
             <p>{t("empty")}</p>
           ) : (
             <div className="settings-list-v2">
               {users.map((user) => (
-                <div className="settings-row" key={user.name}>
+                <div className="settings-row" key={String(user.id ?? user.user_id ?? user.name)}>
                   <div>
                     <strong>{user.name}</strong>
                     <small>{user.reason}</small>
                   </div>
-                  <button type="button" className="settings-account-cancel">
-                    {t("unblock")}
+                  <button
+                    type="button"
+                    className="settings-account-cancel"
+                    disabled={isUnblocking}
+                    onClick={async () => {
+                      const userId = user?.user_id ?? user?.id;
+                      if (!userId) return;
+                      try {
+                        await unblockUser({ user_id: userId }).unwrap();
+                      } catch (error) {
+                        console.error("Failed to unblock user", error);
+                      }
+                    }}
+                  >
+                    {isUnblocking ? `${t("unblock")}...` : t("unblock")}
                   </button>
                 </div>
               ))}
@@ -245,6 +502,9 @@ function SupportModal({ type, onClose }) {
 export default function SettingsPage() {
   const locale = useLocale();
   const t = useTranslations("settings");
+  const currentUserPayload = useAppSelector(selectCurrentUser);
+  const currentUser = unwrapCurrentUser(currentUserPayload);
+  const currentPhone = formatPhoneForSettings(currentUser);
 
   function readList(key) {
     const value = t.raw(key);
@@ -284,7 +544,12 @@ export default function SettingsPage() {
             <div className="settings-list-v2">
               {accountItems.map(({ key, title, description, icon, tone }) => {
                 const Icon = resolveSettingsIcon(icon);
-                const resolvedSubtitle = key === "language" ? t(`languages.${locale}`) : description;
+                const resolvedSubtitle =
+                  key === "language"
+                    ? t(`languages.${locale}`)
+                    : key === "phone"
+                      ? currentPhone || description
+                      : description;
 
                 return (
                   <button
@@ -345,7 +610,12 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <AccountModal type={activeAccountModal} onClose={() => setActiveAccountModal(null)} />
+      <AccountModal
+        key={activeAccountModal ?? "none"}
+        type={activeAccountModal}
+        onClose={() => setActiveAccountModal(null)}
+        currentPhone={currentPhone}
+      />
       <LanguageModal open={isLanguageModalOpen} onClose={() => setIsLanguageModalOpen(false)} />
       <BlockedUsersModal open={isBlockedUsersOpen} onClose={() => setIsBlockedUsersOpen(false)} />
       <SupportModal type={activeSupportModal} onClose={() => setActiveSupportModal(null)} />

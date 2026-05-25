@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { getStoredAuthToken } from "@/src/features/auth/tokenStorage";
 import BrandMarkW from "./BrandMarkW";
 
 const SPLASH_DURATION_MS = 1200;
@@ -12,8 +13,11 @@ export default function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    const hasStoredToken = Boolean(getStoredAuthToken());
+    const targetPath = hasStoredToken ? "/discover" : "/login";
+
     const timer = setTimeout(() => {
-      router.replace("/login");
+      router.replace(targetPath);
     }, SPLASH_DURATION_MS);
 
     return () => clearTimeout(timer);

@@ -4,6 +4,7 @@ import { Gift } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useGetGiftCategoriesQuery, useGetGiftsQuery } from "@/src/features/gifts/giftsApi";
+import { useGetWalletGiftTransactionsQuery } from "@/src/features/wallet/walletApi";
 import DashboardShell from "./DashboardShell";
 import GiftCard from "./GiftCard";
 import GiftSendModal from "./GiftSendModal";
@@ -16,6 +17,14 @@ export default function GiftMarketPage() {
   const [selectedGift, setSelectedGift] = useState(null);
   const { data: giftCategories = [] } = useGetGiftCategoriesQuery();
   const { data: gifts = [], isFetching: isLoadingGifts, isError: isGiftsError } = useGetGiftsQuery();
+  const { data: walletGiftTransactions = [] } = useGetWalletGiftTransactionsQuery();
+  const sentGiftsCount = useMemo(
+    () =>
+      walletGiftTransactions.filter(
+        (transaction) => String(transaction?.direction ?? "").toLowerCase() === "sent"
+      ).length,
+    [walletGiftTransactions]
+  );
 
   const categories = useMemo(() => {
     const rows = Array.isArray(translationCategories) ? translationCategories : [];
@@ -62,6 +71,9 @@ export default function GiftMarketPage() {
         <div className="gift-heading">
           <SectionTitle icon={Gift} iconProps={{ size: 22 }} title={t("heading")} />
           <p>{t("intro")}</p>
+          <div className="gift-heading-meta">
+            <span className="gift-counter-pill">{t("sentGiftsLabel", { count: sentGiftsCount })}</span>
+          </div>
         </div>
 
         <div className="gift-categories" aria-label={t("categoriesAria")}>

@@ -31,6 +31,14 @@ function pickImage(...values) {
   return "";
 }
 
+function toBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+  return ["1", "true", "yes", "y", "on"].includes(normalized);
+}
+
 function formatMemberSince(value) {
   if (!value) return "";
 
@@ -74,6 +82,30 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     fallbackProfile.cover ||
     defaultCover;
   const interests = (user?.interests ?? []).map(interestLabel).filter(Boolean);
+  const friendshipStatus =
+    user?.friendship_status ??
+    user?.friendshipStatus ??
+    user?.relationship_status ??
+    user?.relation_status ??
+    null;
+  const friendshipId =
+    user?.friendship_id ??
+    user?.friendshipId ??
+    user?.friend_request_id ??
+    user?.request_id ??
+    user?.friendship?.id ??
+    user?.request?.id ??
+    null;
+  const isFriend =
+    toBoolean(user?.is_friend ?? user?.isFriend ?? user?.friends_with_me) ||
+    String(friendshipStatus ?? "").trim().toLowerCase() === "accepted";
+  const isRequestSent = toBoolean(
+    user?.request_sent ??
+      user?.is_request_sent ??
+      user?.sent_request ??
+      user?.has_pending_request
+  );
+  const canCancel = toBoolean(user?.can_cancel ?? user?.canCancel) || isRequestSent;
 
   return {
     ...fallbackProfile,
@@ -91,9 +123,11 @@ export function mapProfileResponse(response, fallbackProfile, fallbackName) {
     occupation: user?.occupation ?? "",
     education: user?.education ?? "",
     memberSince: formatMemberSince(user?.created_at) || (user?.memberSince ?? ""),
-    friendshipStatus: user?.friendship_status ?? user?.friendshipStatus ?? null,
-    friendshipId: user?.friendship_id ?? user?.friendshipId ?? null,
-    canCancel: Boolean(user?.can_cancel ?? user?.canCancel),
+    friendshipStatus,
+    friendshipId,
+    isFriend,
+    isRequestSent,
+    canCancel,
     canRespond: Boolean(user?.can_respond ?? user?.canRespond),
     interests,
     photos: mapPhotos(user, avatar)

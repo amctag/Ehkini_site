@@ -28,12 +28,52 @@ function toCategory(value) {
   return text.toLowerCase().replace(/\s+/g, "_");
 }
 
+const iconByKeyword = [
+  { pattern: /(heart|love|romance)/, icon: "\u2764\uFE0F" },
+  { pattern: /(rose|flower|bouquet)/, icon: "\uD83C\uDF39" },
+  { pattern: /(chocolate|candy|sweet)/, icon: "\uD83C\uDF6B" },
+  { pattern: /(ring)/, icon: "\uD83D\uDC8D" },
+  { pattern: /(diamond|gem|jewel)/, icon: "\uD83D\uDC8E" },
+  { pattern: /(crown|king|queen|royal)/, icon: "\uD83D\uDC51" },
+  { pattern: /(champagne|wine|toast|drink)/, icon: "\uD83C\uDF7E" },
+  { pattern: /(star)/, icon: "\u2B50" },
+  { pattern: /(teddy|bear|toy)/, icon: "\uD83E\uDDF8" },
+  { pattern: /(cake|birthday)/, icon: "\uD83C\uDF82" },
+  { pattern: /(gift|box|present|surprise)/, icon: "\uD83C\uDF81" }
+];
+
+const iconByCategory = {
+  romantic: "\uD83D\uDC95",
+  luxury: "\uD83D\uDC8E",
+  special: "\u2728",
+  seasonal: "\uD83C\uDF89",
+  all: "\uD83C\uDF81"
+};
+
+function resolveGiftIcon(row, { id, name, description, category }) {
+  const providedIcon = String(row?.icon ?? row?.emoji ?? row?.gift_icon ?? "").trim();
+  const iconIsImage = providedIcon.startsWith("http") || providedIcon.startsWith("/");
+
+  // Preserve explicit image assets.
+  if (iconIsImage) {
+    return providedIcon;
+  }
+
+  const normalizedText = `${id} ${name} ${description}`.toLowerCase();
+  const keywordMatch = iconByKeyword.find(({ pattern }) => pattern.test(normalizedText));
+  if (keywordMatch) {
+    return keywordMatch.icon;
+  }
+
+  return (iconByCategory[category] ?? providedIcon) || "\uD83C\uDF81";
+}
+
 function normalizeGiftRow(row, index) {
   const id = row?.gift_id ?? row?.id ?? `gift-${index}`;
   const name = String(row?.name ?? row?.title ?? `Gift ${index + 1}`).trim();
   const description = String(row?.description ?? row?.subtitle ?? "").trim();
-  const icon = String(row?.icon ?? row?.emoji ?? row?.gift_icon ?? "🎁").trim() || "🎁";
   const category = toCategory(row?.category ?? row?.type ?? row?.group);
+  const icon = resolveGiftIcon(row, { id, name, description, category });
 
   return {
     ...row,
@@ -81,8 +121,12 @@ function buildSendGiftBody(input) {
     );
   const userId =
     pickId(
+      input?.recipient?.receiver_id ??
+      input?.recipient?.receiverId ??
       input?.recipient?.user_id ??
       input?.recipient?.id ??
+      input?.receiver_id ??
+      input?.receiverId ??
       input?.user_id ??
       input?.recipient_id ??
       input?.receiver_id
@@ -91,7 +135,11 @@ function buildSendGiftBody(input) {
 
   const body = {};
   if (giftId !== null) body.gift_id = giftId;
-  if (userId !== null) body.user_id = userId;
+  if (userId !== null) {
+    body.receiver_id = userId;
+    // Keep backward compatibility for backends that still accept `user_id`.
+    body.user_id = userId;
+  }
   if (message) body.message = message;
 
   return body;

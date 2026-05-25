@@ -395,6 +395,14 @@
       "message": "Message"
     },
     "addFriend": "Add Friend",
+    "actions": {
+      "removeFriend": "Remove Friend",
+      "block": "Block",
+      "report": "Report",
+      "removing": "Removing...",
+      "blocking": "Blocking...",
+      "reporting": "Reporting..."
+    },
     "friendsList": [
       {
         "id": 1,
@@ -480,6 +488,7 @@
     "pageSubtitle": "Express your feelings with gifts",
     "heading": "Gift Market",
     "intro": "Send digital gifts to show appreciation and connect with others",
+    "sentGiftsLabel": "Gifts Sent: {count}",
     "categoriesAria": "Gift categories",
     "categories": [
       {
@@ -696,6 +705,21 @@
     "goBackAria": "Go back",
     "heading": "Camera & Stories",
     "intro": "Share moments that disappear in 24 hours",
+    "publishStory": "Upload Story",
+    "publishingStory": "Uploading...",
+    "publishSuccess": "Story uploaded successfully.",
+    "publishError": "Could not upload story. Please try again.",
+    "selectMediaFirst": "Select a photo first.",
+    "selectedFile": "Selected file: {name}",
+    "selectedPreviewAlt": "Selected story preview",
+    "removeSelectedAria": "Remove selected image",
+    "cameraTitle": "Take Photo",
+    "cameraCloseAria": "Close camera",
+    "cameraStarting": "Starting camera...",
+    "cameraCapture": "Capture Photo",
+    "cameraUnsupported": "Camera is not supported on this device/browser.",
+    "cameraPermissionError": "Could not open camera. Please allow camera access.",
+    "cameraCaptureError": "Could not capture photo. Please try again.",
     "activeStories": "Your Active Stories",
     "noActiveStories": "No active stories",
     "firstMoment": "Share your first moment above!",
@@ -739,21 +763,22 @@
     "pageSubtitle": "Create and share posts",
     "heading": "Create Post",
     "intro": "Upload a photo and add your caption",
-    "goToStories": "Switch to Stories",
+    "publishPost": "Publish Post",
+    "publishingPost": "Publishing...",
+    "publishSuccess": "Post published successfully.",
+    "publishError": "Could not publish post. Please try again.",
+    "selectMediaFirst": "Select an image first.",
     "selectedFile": "Selected file: {name}",
     "selectedPreviewAlt": "Selected media preview",
     "captionLabel": "Caption",
     "captionPlaceholder": "Write your caption here...",
+    "emojiHint": "Add emoji",
+    "addEmojiAria": "Add emoji {emoji}",
     "actions": [
       {
         "title": "Photo Post",
         "description": "Upload an image",
         "icon": "image"
-      },
-      {
-        "title": "Take Photo",
-        "description": "Use your camera",
-        "icon": "camera"
       }
     ]
   },
@@ -766,7 +791,8 @@
     "statsLabels": {
       "age": "Age",
       "gender": "Gender",
-      "memberSince": "Member Since"
+      "memberSince": "Member Since",
+      "giftsReceived": "Gifts Received"
     },
     "edit": "Edit",
     "myProfile": "My Profile",
@@ -796,6 +822,16 @@
       }
     ],
     "giftsReceivedHeading": "Gifts Received",
+    "openGiftTransactionsAria": "Open gifts transactions",
+    "giftTransactionsTitle": "Gift Transactions",
+    "giftTransactionsCloseAria": "Close gift transactions",
+    "giftTransactionsLoading": "Loading gift transactions...",
+    "giftTransactionsLoadError": "Could not load gift transactions. Please try again.",
+    "giftTransactionsEmpty": "No gift transactions found.",
+    "transactionDirectionSent": "Sent",
+    "transactionDirectionReceived": "Received",
+    "transactionSenderLabel": "Sender: {name}",
+    "transactionReceiverLabel": "Receiver: {name}",
     "emptyReceivedGifts": "No gifts received yet.",
     "fromPrefix": "From {name}",
     "receivedGifts": [
@@ -999,6 +1035,9 @@
         "title": "Change Phone Number",
         "subtitle": "We'll send a verification code to your new number",
         "actionLabel": "Send Code",
+        "confirmActionLabel": "Confirm Code",
+        "otpLabel": "OTP Code",
+        "otpPlaceholder": "Enter OTP code",
         "closeAria": "Close Change Phone Number",
         "fields": [
           {
@@ -1018,6 +1057,10 @@
         "title": "Change Password",
         "subtitle": "Enter your current password and choose a new one",
         "actionLabel": "Update Password",
+        "sendOtpActionLabel": "Send OTP",
+        "confirmActionLabel": "Confirm Code",
+        "otpLabel": "OTP Code",
+        "otpPlaceholder": "Enter OTP code",
         "closeAria": "Close Change Password",
         "fields": [
           {
@@ -1153,6 +1196,7 @@
       }
     },
     "friendStatus": "Friend",
+    "alreadyFriend": "Already Friend",
     "requestSent": "Sent",
     "cancelRequest": "Cancel request",
     "requestSentMessage": "Friend request sent.",

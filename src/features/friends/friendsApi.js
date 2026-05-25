@@ -39,6 +39,22 @@ function buildCancelRequestBody(input) {
   return {};
 }
 
+function buildRemoveFriendRequestBody(input) {
+  const friendId = pickId(
+    input?.friend_id ??
+      input?.friendId ??
+      input?.user_id ??
+      input?.userId ??
+      input?.receiver_id ??
+      input?.receiverId ??
+      input?.id ??
+      input
+  );
+
+  if (friendId === null) return {};
+  return { friend_id: friendId };
+}
+
 export const friendsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFriends: builder.query({
@@ -46,8 +62,21 @@ export const friendsApi = api.injectEndpoints({
       transformResponse: mapFriendsResponse,
       providesTags: ["Friends"]
     }),
+    searchFriends: builder.query({
+      query: (searchText) => ({
+        url: "friends/search",
+        params: {
+          q: searchText,
+          name: searchText,
+          search_name: searchText
+        }
+      }),
+      transformResponse: mapFriendsResponse,
+      providesTags: ["Friends"]
+    }),
     getFriendSuggestions: builder.query({
-      query: () => "/friends/suggestions",
+      query: () => "friends/suggested",
+      transformResponse: mapFriendsResponse,
       providesTags: ["Friends"]
     }),
     sendFriendRequest: builder.mutation({
@@ -65,13 +94,23 @@ export const friendsApi = api.injectEndpoints({
         body: buildCancelRequestBody(payload)
       }),
       invalidatesTags: ["Friends"]
+    }),
+    removeFriend: builder.mutation({
+      query: (payload) => ({
+        url: "friends/remove",
+        method: "POST",
+        body: buildRemoveFriendRequestBody(payload)
+      }),
+      invalidatesTags: ["Friends"]
     })
   })
 });
 
 export const {
   useGetFriendsQuery,
+  useSearchFriendsQuery,
   useGetFriendSuggestionsQuery,
   useSendFriendRequestMutation,
-  useCancelFriendRequestMutation
+  useCancelFriendRequestMutation,
+  useRemoveFriendMutation
 } = friendsApi;

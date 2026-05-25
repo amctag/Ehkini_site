@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { mockProfilesBySlug } from "@/mocks/data/profiles/by-slug";
 import {
+  useGetFriendsQuery,
   useCancelFriendRequestMutation,
   useSendFriendRequestMutation
 } from "@/src/features/friends/friendsApi";
@@ -62,9 +63,14 @@ function profileIdOf(row) {
   return String(row?.userId ?? row?.user_id ?? row?.friend_id ?? row?.id ?? "");
 }
 
+function normalizeId(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
 function receiverIdOf(profile, slug) {
   const rawId = profile?.id ?? profile?.userId ?? profile?.user_id ?? slug;
-  const idText = String(rawId ?? "").trim();
+  const idText = normalizeId(rawId);
   if (!idText) return null;
   return /^\d+$/.test(idText) ? Number(idText) : idText;
 }
@@ -145,17 +151,29 @@ export default function ProfileViewPage({ slug }) {
     cachedProfile ??
     fetchedProfile ??
     buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
+  const { data: friends = [] } = useGetFriendsQuery();
   const receiverId = receiverIdOf(profile, safeSlug);
   const [sendFriendRequest, { isLoading: isSendingFriendRequest }] = useSendFriendRequestMutation();
   const [cancelFriendRequest, { isLoading: isCancelingFriendRequest }] = useCancelFriendRequestMutation();
   const [friendshipOverride, setFriendshipOverride] = useState(null);
   const [friendRequestMessage, setFriendRequestMessage] = useState("");
   const receiverKey = String(receiverId ?? "");
+  const receiverIdKey = normalizeId(receiverId);
+  const isFriendFromFriendsList = Boolean(
+    receiverIdKey &&
+      friends.some((friend) => {
+        const friendUserId = normalizeId(friend?.userId ?? friend?.user_id);
+        const friendId = normalizeId(friend?.id);
+        return receiverIdKey === friendUserId || receiverIdKey === friendId;
+      })
+  );
   const profileStatus = normalizeFriendshipStatus(profile?.friendshipStatus ?? profile?.friendship_status);
-  const isFriendFromProfile = isFriendStatus(profileStatus);
-  const isSentFromProfile = isSentStatus(profileStatus) || (Boolean(profile?.canCancel) && !isFriendFromProfile);
+  const isFriendFromProfile = Boolean(profile?.isFriend) || isFriendFromFriendsList || isFriendStatus(profileStatus);
+  const isSentFromProfile =
+    !isFriendFromProfile &&
+    (Boolean(profile?.isRequestSent) || isSentStatus(profileStatus) || Boolean(profile?.canCancel));
   const friendshipIdFromProfile = profile?.friendshipId ?? profile?.friendship_id ?? null;
-  const canCancelFromProfile = Boolean(profile?.canCancel) || Boolean(friendshipIdFromProfile && isSentFromProfile);
+  const canCancelFromProfile = isSentFromProfile || Boolean(friendshipIdFromProfile);
   const hasOverride = friendshipOverride?.receiverKey === receiverKey;
   const isFriend = hasOverride ? Boolean(friendshipOverride?.isFriend) : isFriendFromProfile;
   const isSent = hasOverride ? Boolean(friendshipOverride?.isSent) : isSentFromProfile;
@@ -181,45 +199,37 @@ export default function ProfileViewPage({ slug }) {
 
         <div className="profile-view-actions">
           {isFriend ? (
-            <div className="friendship-state friend">
+            <button type="button" className="friendship-state friend" disabled aria-label={t("alreadyFriend")}>
               <Check size={15} />
-              {t("friendStatus")}
-            </div>
+              {t("alreadyFriend")}
+            </button>
           ) : null}
           {!isFriend && isSent ? (
-            <div className="friendship-state sent">
-              <span className="friendship-state-label">
-                <Check size={14} />
-                {t("requestSent")}
-              </span>
-              {canCancel ? (
-                <button
-                  type="button"
-                  className="friendship-cancel"
-                  disabled={isCancelingFriendRequest}
-                  aria-label={t("cancelRequest")}
-                  onClick={async () => {
-                    if (!receiverId) return;
-                    const payload = friendshipId ? { friendship_id: friendshipId } : { receiver_id: receiverId };
-                    try {
-                      await cancelFriendRequest(payload).unwrap();
-                      setFriendshipOverride({
-                        receiverKey,
-                        isFriend: false,
-                        isSent: false,
-                        canCancel: false,
-                        friendshipId: null
-                      });
-                      setFriendRequestMessage(t("requestCanceledMessage"));
-                    } catch (error) {
-                      console.error("Failed to cancel friend request", error);
-                    }
-                  }}
-                >
-                  ×
-                </button>
-              ) : null}
-            </div>
+            <button
+              type="button"
+              className="friendship-state sent"
+              disabled={!canCancel || isCancelingFriendRequest}
+              aria-label={t("cancelRequest")}
+              onClick={async () => {
+                if (!receiverId) return;
+                const payload = friendshipId ? { friendship_id: friendshipId } : { receiver_id: receiverId };
+                try {
+                  await cancelFriendRequest(payload).unwrap();
+                  setFriendshipOverride({
+                    receiverKey,
+                    isFriend: false,
+                    isSent: false,
+                    canCancel: false,
+                    friendshipId: null
+                  });
+                  setFriendRequestMessage(t("requestCanceledMessage"));
+                } catch (error) {
+                  console.error("Failed to cancel friend request", error);
+                }
+              }}
+            >
+              {isCancelingFriendRequest ? `${t("cancelRequest")}...` : t("cancelRequest")}
+            </button>
           ) : null}
           {!isFriend && !isSent ? (
             <button

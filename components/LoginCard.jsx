@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useGetCountriesQuery,
   useLoginMutation
 } from "@/src/features/auth/authApi";
+import { selectAuthToken, selectIsAuthenticated } from "@/src/features/auth/authSlice";
+import { getStoredAuthToken } from "@/src/features/auth/tokenStorage";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import CountryCodeSelect from "./CountryCodeSelect";
 
 function getFirstValidationMessage(errors) {
@@ -35,13 +38,23 @@ function getLoginErrorMessage(error, t) {
 export default function LoginCard() {
   const t = useTranslations("loginCard");
   const router = useRouter();
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authToken = useAppSelector(selectAuthToken);
   const [countryCode, setCountryCode] = useState("+961");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [hasStoredToken] = useState(() => Boolean(getStoredAuthToken()));
   const [login, { isLoading: isLoggingIn }] = useLoginMutation();
   const { data: countryOptions = [], isLoading: isLoadingCountries } =
     useGetCountriesQuery();
+  const shouldRedirectAuthenticatedUser = isAuthenticated || Boolean(authToken) || hasStoredToken;
+
+  useEffect(() => {
+    if (shouldRedirectAuthenticatedUser) {
+      router.replace("/discover");
+    }
+  }, [shouldRedirectAuthenticatedUser, router]);
 
   const resolvedCountryOptions = useMemo(() => {
     if (countryOptions.length > 0) return countryOptions;
@@ -82,10 +95,14 @@ export default function LoginCard() {
 
     try {
       await login(payload).unwrap();
-      router.push("/discover");
+      router.replace("/discover");
     } catch (error) {
       setFormError(String(getLoginErrorMessage(error, t)));
     }
+  }
+
+  if (shouldRedirectAuthenticatedUser) {
+    return null;
   }
 
   return (

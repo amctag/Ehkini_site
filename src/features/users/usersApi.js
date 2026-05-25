@@ -97,6 +97,30 @@ function buildSearchClickPayload(user) {
   return { user_id: userId };
 }
 
+function buildUserActionPayload(input) {
+  const source = typeof input === "object" && input !== null ? input : { user_id: input };
+  const rawUserId =
+    source?.user_id ??
+    source?.userId ??
+    source?.id ??
+    source?.target_user_id ??
+    source?.searched_user_id ??
+    source?.user?.id ??
+    source?.profile?.id ??
+    null;
+
+  if (rawUserId === null || rawUserId === undefined || String(rawUserId).trim() === "") return {};
+
+  const userIdText = String(rawUserId).trim();
+  const userId = /^\d+$/.test(userIdText) ? Number(userIdText) : userIdText;
+  const payload = { user_id: userId };
+
+  const reason = String(source?.reason ?? "").trim();
+  if (reason) payload.reason = reason;
+
+  return payload;
+}
+
 export const usersApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query({
@@ -152,6 +176,22 @@ export const usersApi = api.injectEndpoints({
         responseHandler: "text"
       }),
       invalidatesTags: ["UserSearch"]
+    }),
+    blockUser: builder.mutation({
+      query: (input) => ({
+        url: "users/block",
+        method: "POST",
+        body: buildUserActionPayload(input)
+      }),
+      invalidatesTags: ["User", "Friends"]
+    }),
+    reportUser: builder.mutation({
+      query: (input) => ({
+        url: "users/report",
+        method: "POST",
+        body: buildUserActionPayload(input)
+      }),
+      invalidatesTags: ["User", "Friends"]
     })
   })
 });
@@ -163,5 +203,7 @@ export const {
   useGetLastSearchedUsersQuery,
   useSaveUserSearchClickMutation,
   useRemoveUserSearchClickMutation,
-  useClearLastSearchedUsersMutation
+  useClearLastSearchedUsersMutation,
+  useBlockUserMutation,
+  useReportUserMutation
 } = usersApi;

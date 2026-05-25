@@ -1,24 +1,35 @@
 "use client";
 
-import { Camera, Image as ImageIcon, PenSquare, Sparkles } from "lucide-react";
+import { Image as ImageIcon, PenSquare, SmilePlus } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { useCreatePostMutation } from "@/src/features/posts/postsApi";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
+const captionEmojis = [
+  "\u{1F60D}",
+  "\u2764\uFE0F",
+  "\u{1F525}",
+  "\u{1F60A}",
+  "\u{1F389}",
+  "\u2728",
+  "\u{1F602}",
+  "\u{1F64F}"
+];
+
 export default function PostsPage() {
   const t = useTranslations("posts");
-  const router = useRouter();
   const actions = t.raw("actions");
   const uploadInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
+  const [createPost, { isLoading: isPublishing }] = useCreatePostMutation();
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [caption, setCaption] = useState("");
+  const [postError, setPostError] = useState("");
+  const [postStatus, setPostStatus] = useState("");
 
   function resolveIcon(icon) {
-    if (icon === "camera") return Camera;
     if (icon === "image") return ImageIcon;
     return PenSquare;
   }
@@ -40,19 +51,38 @@ export default function PostsPage() {
     }
 
     const previewUrl = URL.createObjectURL(file);
-    setSelectedMedia({
-      file,
-      previewUrl
-    });
+    setSelectedMedia({ file, previewUrl });
   }
 
-  function triggerPicker(icon) {
-    if (icon === "camera") {
-      cameraInputRef.current?.click();
+  function triggerPicker() {
+    uploadInputRef.current?.click();
+  }
+
+  async function handlePublishPost() {
+    setPostError("");
+    setPostStatus("");
+
+    if (!selectedMedia?.file) {
+      setPostError(t("selectMediaFirst"));
       return;
     }
 
-    uploadInputRef.current?.click();
+    try {
+      const response = await createPost({
+        file: selectedMedia.file,
+        caption
+      }).unwrap();
+
+      setPostStatus(String(response?.message ?? t("publishSuccess")));
+      if (selectedMedia?.previewUrl) {
+        URL.revokeObjectURL(selectedMedia.previewUrl);
+      }
+      setSelectedMedia(null);
+      setCaption("");
+    } catch (error) {
+      const message = error?.data?.message ?? error?.error ?? t("publishError");
+      setPostError(String(message));
+    }
   }
 
   return (
@@ -69,33 +99,22 @@ export default function PostsPage() {
             className="media-picker-input"
             onChange={handlePickMedia}
           />
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="media-picker-input"
-            onChange={handlePickMedia}
-          />
 
           <div className="post-action-grid">
-            {actions.map((action) => {
-              const Icon = resolveIcon(action.icon);
-              return (
-                <button
-                  type="button"
-                  key={action.title}
-                  className="post-action-card"
-                  onClick={() => triggerPicker(action.icon)}
-                >
-                  <span className="post-action-icon">
-                    <Icon size={24} strokeWidth={2} />
-                  </span>
-                  <strong>{action.title}</strong>
-                  <small>{action.description}</small>
-                </button>
-              );
-            })}
+            {actions
+              .filter((action) => action.icon !== "camera")
+              .map((action) => {
+                const Icon = resolveIcon(action.icon);
+                return (
+                  <button type="button" key={action.title} className="post-action-card" onClick={triggerPicker}>
+                    <span className="post-action-icon">
+                      <Icon size={24} strokeWidth={2} />
+                    </span>
+                    <strong>{action.title}</strong>
+                    <small>{action.description}</small>
+                  </button>
+                );
+              })}
           </div>
 
           {selectedMedia ? (
@@ -119,13 +138,32 @@ export default function PostsPage() {
                   placeholder={t("captionPlaceholder")}
                   rows={3}
                 />
+                <div className="post-emoji-row">
+                  {captionEmojis.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="post-emoji-button"
+                      aria-label={t("addEmojiAria", { emoji })}
+                      onClick={() => setCaption((current) => `${current}${emoji}`)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <span className="post-emoji-hint">
+                    <SmilePlus size={14} />
+                    {t("emojiHint")}
+                  </span>
+                </div>
               </label>
             </div>
           ) : null}
 
-          <button type="button" className="posts-story-link" onClick={() => router.push("/stories")}>
-            <Sparkles size={16} />
-            {t("goToStories")}
+          {postStatus ? <p className="posts-submit-status">{postStatus}</p> : null}
+          {postError ? <p className="posts-submit-error">{postError}</p> : null}
+
+          <button type="button" className="posts-story-link" onClick={handlePublishPost} disabled={isPublishing}>
+            {isPublishing ? t("publishingPost") : t("publishPost")}
           </button>
         </div>
       </section>

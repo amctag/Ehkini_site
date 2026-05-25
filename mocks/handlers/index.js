@@ -7,6 +7,8 @@ import { handleFriends } from "./friends";
 import { handleGifts } from "./gifts";
 import { handleWallet } from "./wallet";
 import { handleSettings } from "./settings";
+import { handleUsers } from "./users";
+import { handlePosts } from "./posts";
 
 const MOCK_DELAY_MS = 200;
 
@@ -18,7 +20,9 @@ const handlers = [
   handleFriends,
   handleGifts,
   handleWallet,
-  handleSettings
+  handleSettings,
+  handleUsers,
+  handlePosts
 ];
 
 /**

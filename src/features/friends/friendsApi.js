@@ -55,6 +55,92 @@ function buildRemoveFriendRequestBody(input) {
   return { friend_id: friendId };
 }
 
+function normalizeImageUrl(value) {
+  const image = String(value ?? "").trim();
+  if (!image) return "";
+
+  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
+    return image;
+  }
+
+  if (image.startsWith("//")) {
+    return `https:${image}`;
+  }
+
+  if (/^[\w.-]+\.[a-z]{2,}\/.+/i.test(image)) {
+    return `https://${image}`;
+  }
+
+  return `/${image.replace(/^\/+/, "")}`;
+}
+
+function pickImage(...values) {
+  for (const value of values) {
+    const image = normalizeImageUrl(value);
+    if (image) return image;
+  }
+  return "";
+}
+
+function mapIncomingFriendRequestRow(row, index = 0) {
+  const sender = row?.sender ?? row?.from_user ?? row?.requester ?? row?.user ?? row?.friend ?? row;
+  const firstLastName = [sender?.first_name, sender?.last_name].filter(Boolean).join(" ").trim();
+  const name = String(sender?.full_name ?? firstLastName ?? sender?.name ?? "").trim() || `User #${index + 1}`;
+
+  return {
+    id: row?.id ?? row?.request_id ?? row?.friendship_id ?? sender?.id ?? `incoming-${index}`,
+    requestId: row?.request_id ?? row?.id ?? null,
+    friendshipId: row?.friendship_id ?? row?.friendshipId ?? row?.id ?? null,
+    senderId: sender?.id ?? row?.sender_id ?? row?.user_id ?? null,
+    name,
+    image: pickImage(
+      sender?.profile_image_url,
+      sender?.profile_image,
+      sender?.avatar_url,
+      sender?.avatar,
+      sender?.image,
+      row?.profile_image_url,
+      row?.profile_image
+    ),
+    createdAt: row?.created_at ?? row?.requested_at ?? row?.sent_at ?? null,
+    status: row?.status ?? ""
+  };
+}
+
+function mapIncomingFriendRequestsResponse(response) {
+  const rows =
+    (Array.isArray(response) && response) ||
+    (Array.isArray(response?.data) && response.data) ||
+    (Array.isArray(response?.requests) && response.requests) ||
+    (Array.isArray(response?.data?.requests) && response.data.requests) ||
+    (Array.isArray(response?.response) && response.response) ||
+    [];
+
+  return rows.map(mapIncomingFriendRequestRow);
+}
+
+function buildRespondFriendRequestBody(input) {
+  const friendshipId = pickId(
+    input?.friendship_id ??
+      input?.friendshipId ??
+      input?.request_id ??
+      input?.requestId ??
+      input?.id
+  );
+  const actionText = String(input?.action ?? input?.status ?? input?.response ?? "").trim().toLowerCase();
+  const normalizedAction = actionText === "accept" || actionText === "accepted" ? "accept" : "reject";
+
+  const payload = {
+    action: normalizedAction
+  };
+
+  if (friendshipId !== null) {
+    payload.friendship_id = friendshipId;
+  }
+
+  return payload;
+}
+
 export const friendsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFriends: builder.query({
@@ -102,6 +188,19 @@ export const friendsApi = api.injectEndpoints({
         body: buildRemoveFriendRequestBody(payload)
       }),
       invalidatesTags: ["Friends"]
+    }),
+    getIncomingFriendRequests: builder.query({
+      query: () => "friends/requests",
+      transformResponse: mapIncomingFriendRequestsResponse,
+      providesTags: ["Friends"]
+    }),
+    respondFriendRequest: builder.mutation({
+      query: (payload) => ({
+        url: "friends/respond",
+        method: "POST",
+        body: buildRespondFriendRequestBody(payload)
+      }),
+      invalidatesTags: ["Friends"]
     })
   })
 });
@@ -112,5 +211,7 @@ export const {
   useGetFriendSuggestionsQuery,
   useSendFriendRequestMutation,
   useCancelFriendRequestMutation,
-  useRemoveFriendMutation
+  useRemoveFriendMutation,
+  useGetIncomingFriendRequestsQuery,
+  useRespondFriendRequestMutation
 } = friendsApi;

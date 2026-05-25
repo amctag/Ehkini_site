@@ -14,8 +14,10 @@ import {
   UserX,
   X
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { useLogoutMutation } from "@/src/features/auth/authApi";
 import {
   useConfirmPasswordOtpMutation,
   useConfirmPhoneNewMutation,
@@ -500,8 +502,10 @@ function SupportModal({ type, onClose }) {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("settings");
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
   const currentUserPayload = useAppSelector(selectCurrentUser);
   const currentUser = unwrapCurrentUser(currentUserPayload);
   const currentPhone = formatPhoneForSettings(currentUser);
@@ -532,6 +536,16 @@ export default function SettingsPage() {
 
     if (key === "blocked") {
       setIsBlockedUsersOpen(true);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await logout().unwrap();
+    } catch {
+      // The logout mutation clears local auth state even if the server rejects the token.
+    } finally {
+      router.replace("/");
     }
   }
 
@@ -599,9 +613,9 @@ export default function SettingsPage() {
         </div>
 
         <div className="settings-actions-v2">
-          <button type="button" className="settings-action-button">
+          <button type="button" className="settings-action-button" onClick={handleLogout} disabled={isLoggingOut}>
             <LogOut size={15} />
-            {t("actions.logout")}
+            {isLoggingOut ? `${t("actions.logout")}...` : t("actions.logout")}
           </button>
           <button type="button" className="settings-action-button danger">
             <Trash2 size={15} />

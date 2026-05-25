@@ -2740,6 +2740,167 @@ a {
   object-fit: cover;
 }
 
+.active-story-card .story-delete-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(146, 11, 11, 0.82);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.active-story-card .story-delete-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.active-story-card .story-views-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(17, 24, 39, 0.78);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.active-story-card .story-views-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.story-viewers-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.58);
+}
+
+.story-viewers-modal {
+  width: min(96vw, 520px);
+  max-height: 82vh;
+  overflow: auto;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.34);
+}
+
+.story-viewers-head {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid #eceff4;
+}
+
+.story-viewers-head h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.story-viewers-head button {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #475467;
+  background: transparent;
+  cursor: pointer;
+}
+
+.story-viewers-body {
+  padding: 10px 12px 12px;
+}
+
+.story-viewers-state {
+  margin: 6px 2px;
+  color: #667085;
+  font-size: 14px;
+}
+
+.story-viewers-state.error {
+  color: #b42318;
+}
+
+.story-viewers-list {
+  display: grid;
+  gap: 8px;
+}
+
+.story-viewer-row {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.story-viewer-row img,
+.story-viewer-avatar-fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+}
+
+.story-viewer-row img {
+  object-fit: cover;
+}
+
+.story-viewer-avatar-fallback {
+  display: inline-grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #ff8a3d 0%, #ea7500 100%);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.story-viewer-row strong {
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.story-viewer-row small {
+  display: block;
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+}
+
 .posts-page {
   display: grid;
   justify-content: center;
@@ -3458,7 +3619,14 @@ a {
   color: #ff7336;
 }
 
-.friends-title-row > span {
+.friends-title-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.friends-title-row > span,
+.friends-title-meta > span {
   min-height: 20px;
   display: inline-grid;
   place-items: center;
@@ -3468,6 +3636,163 @@ a {
   background: #ff7336;
   font-size: 12px;
   font-weight: 700;
+}
+
+.incoming-requests-pill {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid #ffcfb6;
+  border-radius: 999px;
+  color: #ff5b22;
+  background: #fff4ee;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.friends-incoming-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.58);
+}
+
+.friends-incoming-modal {
+  width: min(96vw, 560px);
+  max-height: 82vh;
+  overflow: auto;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.34);
+}
+
+.friends-incoming-head {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid #eceff4;
+}
+
+.friends-incoming-head h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.friends-incoming-head button {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #475467;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.friends-incoming-body {
+  padding: 10px 12px 12px;
+}
+
+.friends-incoming-state {
+  margin: 6px 2px;
+  color: #667085;
+  font-size: 14px;
+}
+
+.friends-incoming-state.error {
+  color: #b42318;
+}
+
+.friends-incoming-list {
+  display: grid;
+  gap: 10px;
+}
+
+.friends-incoming-row {
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.friends-incoming-row img,
+.friends-incoming-avatar-fallback {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+}
+
+.friends-incoming-row img {
+  object-fit: cover;
+}
+
+.friends-incoming-avatar-fallback {
+  display: inline-grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #ff8a3d 0%, #ea7500 100%);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.friends-incoming-copy strong {
+  color: #172033;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.friends-incoming-copy small {
+  display: block;
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.friends-incoming-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.friends-incoming-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.friends-incoming-actions .accept {
+  color: #fff;
+  background: #12b76a;
+}
+
+.friends-incoming-actions .reject {
+  color: #fff;
+  background: #d92d20;
+}
+
+.friends-incoming-actions button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .friends-search {

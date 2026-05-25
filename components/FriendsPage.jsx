@@ -10,7 +10,9 @@ import {
   useCancelFriendRequestMutation,
   useGetFriendSuggestionsQuery,
   useGetFriendsQuery,
+  useGetIncomingFriendRequestsQuery,
   useRemoveFriendMutation,
+  useRespondFriendRequestMutation,
   useSendFriendRequestMutation,
   useSearchFriendsQuery
 } from "@/src/features/friends/friendsApi";
@@ -66,6 +68,27 @@ function toBoolean(value) {
 
 function suggestionStateKey(suggestion) {
   return String(suggestion?.receiverId ?? suggestion?.profileId ?? suggestion?.id ?? "").trim();
+}
+
+function formatRequestAge(value) {
+  if (!value) return "";
+
+  const createdAt = new Date(value);
+  if (Number.isNaN(createdAt.getTime())) return "";
+
+  const diffMs = createdAt.getTime() - Date.now();
+  const minuteMs = 60 * 1000;
+  const hourMs = 60 * minuteMs;
+  const dayMs = 24 * hourMs;
+
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  if (Math.abs(diffMs) < hourMs) {
+    return rtf.format(Math.round(diffMs / minuteMs), "minute");
+  }
+  if (Math.abs(diffMs) < dayMs) {
+    return rtf.format(Math.round(diffMs / hourMs), "hour");
+  }
+  return rtf.format(Math.round(diffMs / dayMs), "day");
 }
 
 function FriendCard({ friend, pendingAction, onRemoveFriend, onBlockUser, onReportUser, onOpenProfile }) {
@@ -329,11 +352,21 @@ export default function FriendsPage() {
   const [suggestionOverrides, setSuggestionOverrides] = useState({});
   const [pendingSuggestionAction, setPendingSuggestionAction] = useState(null);
   const [requestPopupMessage, setRequestPopupMessage] = useState("");
+  const [isIncomingRequestsOpen, setIsIncomingRequestsOpen] = useState(false);
+  const [pendingIncomingAction, setPendingIncomingAction] = useState(null);
   const [removeFriend] = useRemoveFriendMutation();
   const [sendFriendRequest] = useSendFriendRequestMutation();
   const [cancelFriendRequest] = useCancelFriendRequestMutation();
+  const [respondFriendRequest] = useRespondFriendRequestMutation();
   const [blockUser] = useBlockUserMutation();
   const [reportUser] = useReportUserMutation();
+  const {
+    data: incomingRequests = [],
+    isFetching: isIncomingRequestsFetching,
+    isError: isIncomingRequestsError
+  } = useGetIncomingFriendRequestsQuery(undefined, {
+    skip: !isIncomingRequestsOpen
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -500,9 +533,94 @@ export default function FriendsPage() {
     );
   }
 
+  async function handleRespondIncomingRequest(request, action) {
+    const requestKey = String(request?.id ?? request?.friendshipId ?? request?.requestId ?? "");
+    if (!requestKey) return;
+
+    setPendingIncomingAction({ requestKey, action });
+    try {
+      await respondFriendRequest({
+        friendship_id: request?.friendshipId ?? request?.requestId ?? request?.id,
+        action
+      }).unwrap();
+    } catch (error) {
+      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      setRequestPopupMessage(message || t("incomingRespondError"));
+    } finally {
+      setPendingIncomingAction((current) =>
+        current?.requestKey === requestKey && current?.action === action ? null : current
+      );
+    }
+  }
+
   return (
     <DashboardShell activePageKey="friends" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="friends-page">
+        {isIncomingRequestsOpen ? (
+          <div className="friends-incoming-overlay" role="presentation" onClick={() => setIsIncomingRequestsOpen(false)}>
+            <div className="friends-incoming-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+              <div className="friends-incoming-head">
+                <h3>{t("incomingRequestsTitle")}</h3>
+                <button type="button" aria-label={t("incomingRequestsCloseAria")} onClick={() => setIsIncomingRequestsOpen(false)}>
+                  ✕
+                </button>
+              </div>
+              <div className="friends-incoming-body">
+                {isIncomingRequestsFetching ? <p className="friends-incoming-state">{t("incomingRequestsLoading")}</p> : null}
+                {!isIncomingRequestsFetching && isIncomingRequestsError ? (
+                  <p className="friends-incoming-state error">{t("incomingRequestsError")}</p>
+                ) : null}
+                {!isIncomingRequestsFetching && !isIncomingRequestsError && incomingRequests.length === 0 ? (
+                  <p className="friends-incoming-state">{t("incomingRequestsEmpty")}</p>
+                ) : null}
+                {!isIncomingRequestsFetching && !isIncomingRequestsError && incomingRequests.length > 0 ? (
+                  <div className="friends-incoming-list">
+                    {incomingRequests.map((request) => {
+                      const requestKey = String(request?.id ?? request?.friendshipId ?? request?.requestId ?? "");
+                      const isAccepting = pendingIncomingAction?.requestKey === requestKey && pendingIncomingAction?.action === "accept";
+                      const isRejecting = pendingIncomingAction?.requestKey === requestKey && pendingIncomingAction?.action === "reject";
+                      return (
+                        <article className="friends-incoming-row" key={requestKey}>
+                          {request.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={request.image} alt={request.name} />
+                          ) : (
+                            <span className="friends-incoming-avatar-fallback" aria-hidden="true">
+                              {String(request.name ?? "U").charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <div className="friends-incoming-copy">
+                            <strong>{request.name}</strong>
+                            <small>{formatRequestAge(request.createdAt)}</small>
+                          </div>
+                          <div className="friends-incoming-actions">
+                            <button
+                              type="button"
+                              className="accept"
+                              disabled={isAccepting || isRejecting}
+                              onClick={() => handleRespondIncomingRequest(request, "accept")}
+                            >
+                              {isAccepting ? t("incomingAccepting") : t("incomingAccept")}
+                            </button>
+                            <button
+                              type="button"
+                              className="reject"
+                              disabled={isAccepting || isRejecting}
+                              onClick={() => handleRespondIncomingRequest(request, "reject")}
+                            >
+                              {isRejecting ? t("incomingRejecting") : t("incomingReject")}
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {requestPopupMessage ? (
           <div className="friends-request-popup" role="alertdialog" aria-modal="false">
             <p>{requestPopupMessage}</p>
@@ -514,7 +632,12 @@ export default function FriendsPage() {
         <div className="friends-toolbar">
           <div className="friends-title-row">
             <SectionTitle icon={Users} iconProps={{ size: 24 }} title={t("myFriends")} />
-            <span>{t("friendsCount", { count: friends.length })}</span>
+            <div className="friends-title-meta">
+              <button type="button" className="incoming-requests-pill" onClick={() => setIsIncomingRequestsOpen(true)}>
+                {t("incomingRequestsLabel")}
+              </button>
+              <span>{t("friendsCount", { count: friends.length })}</span>
+            </div>
           </div>
 
           <label className="friends-search">

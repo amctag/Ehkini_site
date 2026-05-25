@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowLeft, Camera, Image as ImageIcon, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, Camera, Eye, Image as ImageIcon, Sparkles, Trash2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import { useCreateStoryMutation } from "@/src/features/stories/storiesApi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useGetMeQuery } from "@/src/features/auth/authApi";
+import { useGetDiscoverStoriesQuery } from "@/src/features/discover/discoverApi";
+import { useCreateStoryMutation, useDeleteStoryMutation, useGetStoryViewsQuery } from "@/src/features/stories/storiesApi";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
@@ -14,16 +16,57 @@ export default function StoriesPage() {
   const router = useRouter();
   const actions = t.raw("actions");
   const friendStories = t.raw("friendStories");
+  const { data: meData } = useGetMeQuery();
+  const { data: allStories = [] } = useGetDiscoverStoriesQuery();
   const galleryInputRef = useRef(null);
   const videoRef = useRef(null);
   const [createStory, { isLoading: isUploading }] = useCreateStoryMutation();
+  const [deleteStory, { isLoading: isDeletingStory }] = useDeleteStoryMutation();
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [storyError, setStoryError] = useState("");
   const [storyStatus, setStoryStatus] = useState("");
+  const [deletingStoryId, setDeletingStoryId] = useState(null);
+  const [viewersStoryId, setViewersStoryId] = useState(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [isStartingCamera, setIsStartingCamera] = useState(false);
   const cameraStreamRef = useRef(null);
+  const {
+    data: storyViewers = [],
+    isFetching: isFetchingStoryViewers,
+    isError: isStoryViewersError
+  } = useGetStoryViewsQuery(viewersStoryId, {
+    skip: !viewersStoryId
+  });
+
+  const currentUserId = useMemo(() => {
+    const source = meData?.user ?? meData ?? {};
+    const raw = source?.id ?? source?.user_id ?? null;
+    const text = String(raw ?? "").trim();
+    if (!text) return null;
+    return text;
+  }, [meData]);
+
+  const activeStories = useMemo(() => {
+    const now = Date.now();
+    const ownStories = allStories.filter((story) => {
+      if (story?.isMine) return true;
+      if (!currentUserId) return false;
+      const storyUserId = String(story?.userId ?? "").trim();
+      return storyUserId && storyUserId === currentUserId;
+    });
+
+    return ownStories
+      .filter((story) => {
+        const expiresAt = story?.expiresAt ? new Date(story.expiresAt).getTime() : NaN;
+        return Number.isNaN(expiresAt) || expiresAt > now;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a?.createdAt ?? 0).getTime();
+        const dateB = new Date(b?.createdAt ?? 0).getTime();
+        return dateA - dateB;
+      });
+  }, [allStories, currentUserId]);
 
   function getActionIcon(name) {
     if (name === "image") return ImageIcon;
@@ -171,6 +214,32 @@ export default function StoriesPage() {
     }
   }
 
+  async function handleDeleteStory(storyId) {
+    const idText = String(storyId ?? "").trim();
+    if (!idText) return;
+
+    setStoryError("");
+    setStoryStatus("");
+    setDeletingStoryId(idText);
+    try {
+      const response = await deleteStory(idText).unwrap();
+      setStoryStatus(String(response?.message ?? t("deleteSuccess")));
+      setViewersStoryId((current) => (current === idText ? null : current));
+    } catch (error) {
+      const message = error?.data?.message ?? error?.error ?? t("deleteError");
+      setStoryError(String(message));
+    } finally {
+      setDeletingStoryId(null);
+    }
+  }
+
+  function formatViewedAt(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString();
+  }
+
   return (
     <DashboardShell activePageKey="stories" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="stories-page">
@@ -269,11 +338,96 @@ export default function StoriesPage() {
           {storyError ? <p className="posts-submit-error">{storyError}</p> : null}
 
           <h3>{t("activeStories")}</h3>
-          <div className="empty-stories">
-            <Sparkles size={48} />
-            <strong>{t("noActiveStories")}</strong>
-            <span>{t("firstMoment")}</span>
-          </div>
+          {activeStories.length > 0 ? (
+            <div className="friend-story-grid">
+              {activeStories.map((story, index) => (
+                <article className="friend-story-card active-story-card" key={story.id ?? `my-story-${index}`}>
+                  <button
+                    type="button"
+                    className="story-delete-button"
+                    aria-label={t("deleteStoryAria")}
+                    onClick={() => handleDeleteStory(story.id)}
+                    disabled={isDeletingStory && deletingStoryId === String(story.id ?? "")}
+                  >
+                    <Trash2 size={14} />
+                    {isDeletingStory && deletingStoryId === String(story.id ?? "") ? t("deletingStory") : t("deleteStory")}
+                  </button>
+                  <button
+                    type="button"
+                    className="story-views-button"
+                    aria-label={t("openViewersAria")}
+                    onClick={() => setViewersStoryId(String(story.id ?? ""))}
+                    disabled={!story?.id}
+                  >
+                    <Eye size={14} />
+                    {t("viewsCount", { count: story?.viewCount ?? 0 })}
+                  </button>
+                  <Image
+                    src={story.image}
+                    alt={t("friendStoryAlt", { name: story.name })}
+                    fill
+                    unoptimized
+                    sizes="160px"
+                  />
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-stories">
+              <Sparkles size={48} />
+              <strong>{t("noActiveStories")}</strong>
+              <span>{t("firstMoment")}</span>
+            </div>
+          )}
+
+          {viewersStoryId ? (
+            <div className="story-viewers-overlay" role="presentation" onClick={() => setViewersStoryId(null)}>
+              <div
+                className="story-viewers-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={t("viewersTitle")}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="story-viewers-head">
+                  <h4>{t("viewersTitle")}</h4>
+                  <button type="button" aria-label={t("viewersCloseAria")} onClick={() => setViewersStoryId(null)}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="story-viewers-body">
+                  {isFetchingStoryViewers ? <p className="story-viewers-state">{t("viewersLoading")}</p> : null}
+                  {!isFetchingStoryViewers && isStoryViewersError ? (
+                    <p className="story-viewers-state error">{t("viewersError")}</p>
+                  ) : null}
+                  {!isFetchingStoryViewers && !isStoryViewersError && storyViewers.length === 0 ? (
+                    <p className="story-viewers-state">{t("viewersEmpty")}</p>
+                  ) : null}
+                  {!isFetchingStoryViewers && !isStoryViewersError && storyViewers.length > 0 ? (
+                    <div className="story-viewers-list">
+                      {storyViewers.map((viewer) => (
+                        <article className="story-viewer-row" key={viewer.id}>
+                          {viewer.avatar ? (
+                            // Use native img to avoid remote-host validation issues in production.
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={viewer.avatar} alt={viewer.name} />
+                          ) : (
+                            <span className="story-viewer-avatar-fallback" aria-hidden="true">
+                              {String(viewer.name ?? "U").charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <div>
+                            <strong>{viewer.name}</strong>
+                            {viewer.viewedAt ? <small>{formatViewedAt(viewer.viewedAt)}</small> : null}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <h3>{t("friendsStories")}</h3>
           <div className="friend-story-grid">

@@ -99,6 +99,9 @@ export function mapStoryToDiscoverCard(story) {
     id: story?.id ?? story?.story_id ?? owner?.id ?? name,
     userId: owner?.id ?? story?.user_id ?? null,
     createdAt: story?.created_at ?? story?.createdAt ?? null,
+    expiresAt: story?.expires_at ?? story?.expiresAt ?? null,
+    isMine: Boolean(story?.is_mine ?? story?.isMine),
+    viewCount: Number.isFinite(Number(story?.view_count)) ? Number(story.view_count) : 0,
     name,
     image: storyImage,
     avatar

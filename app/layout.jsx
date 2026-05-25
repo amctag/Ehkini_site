@@ -17,8 +17,8 @@ export default async function RootLayout({ children }) {
   const direction = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={direction}>
-      <body>
+    <html lang={locale} dir={direction} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ReduxProvider>{children}</ReduxProvider>
         </NextIntlClientProvider>

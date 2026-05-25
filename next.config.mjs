@@ -6,6 +6,7 @@ const backendApiOrigin =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    devIndicators: false,
   // EasyPanel preview / dev over public URL (webpack HMR)
   allowedDevOrigins: [
     "amctag-website-ehkini.38f0fz.easypanel.host",

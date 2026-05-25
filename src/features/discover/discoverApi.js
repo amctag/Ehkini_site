@@ -1,5 +1,5 @@
 import { api } from "@/src/services/baseApi";
-import { mapUsersResponse } from "./discoverMappers";
+import { mapStoriesResponse, mapUsersResponse } from "./discoverMappers";
 
 export const discoverApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +9,8 @@ export const discoverApi = api.injectEndpoints({
       providesTags: ["Discover"]
     }),
     getDiscoverStories: builder.query({
-      query: () => "/discover/stories",
+      query: () => "stories",
+      transformResponse: mapStoriesResponse,
       providesTags: ["Discover"]
     })
   })

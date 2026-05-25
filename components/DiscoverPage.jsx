@@ -330,16 +330,7 @@ function People() {
         <SectionTitle icon={Heart} iconProps={{ size: 21 }} title={t("peopleHeading")} />
 
         <div className="people-tools">
-          <label className="people-search-field">
-            <Search size={18} />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("searchPlaceholder")}
-              aria-label={t("searchPlaceholder")}
-            />
-          </label>
+    
 
           <div className="people-filter-wrap" ref={filterRef}>
             <button

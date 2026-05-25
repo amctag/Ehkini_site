@@ -1,4 +1,11 @@
-# Bypass EasyPanel/Railpack mise issues — standard Node build for Next.js
+# Ehkini — production image (Node 20, no Nix/Railpack)
+#
+# EasyPanel → Source → Build method: "Dockerfile" (NOT Nixpacks / Railpack)
+# Dockerfile path: Dockerfile
+# Start command: leave empty (uses CMD below) or "npm start" — never "npm run dev"
+# Port: 3000
+#
+# If the build log shows "Nixpacks" or "nix-env", the wrong build method is selected.
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./

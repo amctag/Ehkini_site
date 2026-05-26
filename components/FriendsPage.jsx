@@ -506,7 +506,12 @@ export default function FriendsPage() {
     setPendingAction({ action, friendKey });
     try {
       await request();
+      if (action === "report") {
+        setRequestPopupMessage(t("reportSubmittedPopup"));
+      }
     } catch (error) {
+      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      setRequestPopupMessage(message || t("requestActionError"));
       console.error(`Failed to ${action} friend`, error);
     } finally {
       setPendingAction((current) => (current?.friendKey === friendKey && current?.action === action ? null : current));
@@ -516,7 +521,7 @@ export default function FriendsPage() {
   async function handleRemoveFriend(friend) {
     const friendId = resolveFriendUserId(friend);
     if (friendId === null) return;
-    await runFriendAction("remove", friend, () => removeFriend({ friend_id: friendId }).unwrap());
+    await runFriendAction("remove", friend, () => removeFriend({ user_id: friendId }).unwrap());
   }
 
   async function handleBlockUser(friend) {

@@ -52,7 +52,10 @@ function buildRemoveFriendRequestBody(input) {
   );
 
   if (friendId === null) return {};
-  return { friend_id: friendId };
+  return {
+    user_id: friendId,
+    friend_id: friendId
+  };
 }
 
 function normalizeImageUrl(value) {

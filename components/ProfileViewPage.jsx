@@ -22,6 +22,7 @@ import {
   useCancelFriendRequestMutation,
   useSendFriendRequestMutation
 } from "@/src/features/friends/friendsApi";
+import { useGetUserPostsQuery } from "@/src/features/posts/postsApi";
 import { useGetProfileBySlugQuery } from "@/src/features/profiles/profilesApi";
 import { mapProfileResponse } from "@/src/features/profiles/profileMappers";
 import { useAppSelector } from "@/src/hooks/reduxHooks";
@@ -66,6 +67,13 @@ function profileIdOf(row) {
 function normalizeId(value) {
   const text = String(value ?? "").trim();
   return text || null;
+}
+
+function validImageUrl(value) {
+  const image = String(value ?? "").trim();
+  if (!image) return "";
+  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) return image;
+  return "";
 }
 
 function receiverIdOf(profile, slug) {
@@ -155,6 +163,18 @@ export default function ProfileViewPage({ slug }) {
     buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
   const { data: friends = [] } = useGetFriendsQuery();
   const receiverId = receiverIdOf(profile, safeSlug);
+  const {
+    data: userPosts = []
+  } = useGetUserPostsQuery(receiverId, {
+    skip: !receiverId
+  });
+  const photosWithPosts = [
+    ...(Array.isArray(profile?.photos) ? profile.photos : []),
+    ...userPosts.map((post) => post?.image)
+  ]
+    .map(validImageUrl)
+    .filter(Boolean)
+    .filter((value, index, list) => list.indexOf(value) === index);
   const [sendFriendRequest, { isLoading: isSendingFriendRequest }] = useSendFriendRequestMutation();
   const [cancelFriendRequest, { isLoading: isCancelingFriendRequest }] = useCancelFriendRequestMutation();
   const [friendshipOverride, setFriendshipOverride] = useState(null);
@@ -343,7 +363,7 @@ export default function ProfileViewPage({ slug }) {
           <article className="profile-view-card photos">
             <h3>{t("sections.photos")}</h3>
             <div className="profile-view-photos">
-              {profile.photos.map((photo, index) => (
+              {photosWithPosts.map((photo, index) => (
                 <div className={index === 0 ? "main-photo" : ""} key={`${profile.name}-photo-${index}`}>
                   <Image
                     src={photo}

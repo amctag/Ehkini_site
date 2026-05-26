@@ -24,8 +24,12 @@ function pickOtpToken(payload) {
 function pickVerifiedToken(payload) {
   return (
     payload?.verified_token ??
+    payload?.reset_token ??
+    payload?.password_reset_token ??
     payload?.token ??
     payload?.data?.verified_token ??
+    payload?.data?.reset_token ??
+    payload?.data?.password_reset_token ??
     payload?.data?.token ??
     ""
   );
@@ -190,6 +194,41 @@ export const authApi = api.injectEndpoints({
         };
       }
     }),
+    forgotPasswordSendOtp: builder.mutation({
+      query: (body) => ({
+        url: "forgot-password/send-otp",
+        method: "POST",
+        body
+      }),
+      transformResponse: (response) => {
+        const data = responseObject(response);
+        return {
+          ...data,
+          otp_token: pickOtpToken(data)
+        };
+      }
+    }),
+    forgotPasswordVerifyOtp: builder.mutation({
+      query: (body) => ({
+        url: "forgot-password/verify-otp",
+        method: "POST",
+        body
+      }),
+      transformResponse: (response) => {
+        const data = responseObject(response);
+        return {
+          ...data,
+          verified_token: pickVerifiedToken(data)
+        };
+      }
+    }),
+    forgotPasswordReset: builder.mutation({
+      query: (body) => ({
+        url: "forgot-password/reset-password",
+        method: "POST",
+        body
+      })
+    }),
     logout: builder.mutation({
       query: () => ({
         url: "logout",
@@ -217,5 +256,8 @@ export const {
   useRegisterMutation,
   useSendRegisterOtpMutation,
   useVerifyRegisterOtpMutation,
+  useForgotPasswordSendOtpMutation,
+  useForgotPasswordVerifyOtpMutation,
+  useForgotPasswordResetMutation,
   useLogoutMutation
 } = authApi;

@@ -3,7 +3,7 @@
 import { Check, ChevronLeft, ChevronRight, Filter, Heart, Search, SendHorizontal, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useGetDiscoverPeopleQuery,
@@ -14,14 +14,34 @@ import DashboardShell from "./DashboardShell";
 import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";
 
+function formatStoryRelativeTime(createdAt, locale, fallback) {
+  if (!createdAt) return fallback;
+
+  const createdAtMs = new Date(createdAt).getTime();
+  if (Number.isNaN(createdAtMs)) return fallback;
+
+  const diffSeconds = Math.round((createdAtMs - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  if (absSeconds < 60) return rtf.format(diffSeconds, "second");
+  if (absSeconds < 60 * 60) return rtf.format(Math.round(diffSeconds / 60), "minute");
+  if (absSeconds < 60 * 60 * 24) return rtf.format(Math.round(diffSeconds / (60 * 60)), "hour");
+  if (absSeconds < 60 * 60 * 24 * 30) return rtf.format(Math.round(diffSeconds / (60 * 60 * 24)), "day");
+
+  return rtf.format(Math.round(diffSeconds / (60 * 60 * 24 * 30)), "month");
+}
+
 function StoryViewer({ storyGroup, activeIndex, onClose, onPrevious, onNext }) {
   const t = useTranslations("discover");
+  const locale = useLocale();
 
   if (!storyGroup || activeIndex === null) return null;
 
   const storyItems = storyGroup.stories;
   const activeStory = storyItems[activeIndex];
   if (!activeStory) return null;
+  const storyAgeText = formatStoryRelativeTime(activeStory.createdAt, locale, t("storyViewer.timeAgo"));
 
   return (
     <div className="story-viewer-overlay" role="presentation" onClick={onClose}>
@@ -71,7 +91,7 @@ function StoryViewer({ storyGroup, activeIndex, onClose, onPrevious, onNext }) {
                 />
               </span>
               <strong>{storyGroup.name}</strong>
-              <small>{t("storyViewer.timeAgo")}</small>
+              <small>{storyAgeText}</small>
             </div>
 
             <button type="button" onClick={onClose} aria-label={t("storyViewer.closeAria")}>

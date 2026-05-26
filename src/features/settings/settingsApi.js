@@ -53,24 +53,57 @@ function normalizePhone(value) {
   return String(value ?? "").trim();
 }
 
+function normalizeCountryCode(value) {
+  return String(value ?? "").trim();
+}
+
+function resolvePhoneCountryCode(input) {
+  return normalizeCountryCode(
+    input?.new_country_code ??
+      input?.newCountryCode ??
+      input?.country_code ??
+      input?.countryCode
+  );
+}
+
+function inferCountryCodeFromPhone(phone) {
+  const text = normalizePhone(phone);
+  if (!text.startsWith("+")) return "";
+  const match = text.match(/^\+\d{1,4}/);
+  return match?.[0] ?? "";
+}
+
 function buildSendPhoneOtpPayload(input) {
   const phone = normalizePhone(input?.phone ?? input?.new_phone ?? input?.newPhone);
+  const countryCode = resolvePhoneCountryCode(input) || inferCountryCodeFromPhone(phone);
   if (!phone) return {};
 
-  return {
+  const payload = {
     phone,
     new_phone: phone
   };
+
+  if (countryCode) {
+    payload.new_country_code = countryCode;
+    payload.country_code = countryCode;
+  }
+
+  return payload;
 }
 
 function buildConfirmPhoneOtpPayload(input) {
   const phone = normalizePhone(input?.phone ?? input?.new_phone ?? input?.newPhone);
+  const countryCode = resolvePhoneCountryCode(input) || inferCountryCodeFromPhone(phone);
   const otp = normalizePhone(input?.otp ?? input?.code);
 
   const payload = {};
   if (phone) {
     payload.phone = phone;
     payload.new_phone = phone;
+  }
+  if (countryCode) {
+    payload.new_country_code = countryCode;
+    payload.country_code = countryCode;
   }
   if (otp) {
     payload.otp = otp;
@@ -103,9 +136,13 @@ function buildPasswordOtpPayload(input) {
 function buildPasswordOtpConfirmPayload(input) {
   const payload = buildPasswordOtpPayload(input);
   const otp = normalizeText(input?.otp ?? input?.code);
+  const otpToken = normalizeText(input?.otp_token ?? input?.otpToken ?? input?.token);
   if (otp) {
     payload.otp = otp;
     payload.code = otp;
+  }
+  if (otpToken) {
+    payload.otp_token = otpToken;
   }
   return payload;
 }
@@ -162,7 +199,7 @@ export const settingsApi = api.injectEndpoints({
     }),
     confirmPasswordOtp: builder.mutation({
       query: (input) => ({
-        url: "profile/password/send-otp",
+        url: "profile/password/update",
         method: "POST",
         body: buildPasswordOtpConfirmPayload(input)
       })

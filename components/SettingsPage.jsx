@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { useLogoutMutation } from "@/src/features/auth/authApi";
+import { useGetCountriesQuery, useLogoutMutation } from "@/src/features/auth/authApi";
 import {
   useConfirmPasswordOtpMutation,
   useConfirmPhoneNewMutation,
@@ -26,8 +26,10 @@ import {
   useSendPhoneOtpNewMutation,
   useUnblockUserMutation
 } from "@/src/features/settings/settingsApi";
-import { selectCurrentUser } from "@/src/features/auth/authSlice";
-import { useAppSelector } from "@/src/hooks/reduxHooks";
+import { clearAuth, selectCurrentUser } from "@/src/features/auth/authSlice";
+import { clearStoredAuthToken } from "@/src/features/auth/tokenStorage";
+import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
+import CountryCodeSelect from "./CountryCodeSelect";
 import DashboardShell from "./DashboardShell";
 
 function SectionHeader({ icon: Icon, title, tone }) {
@@ -67,12 +69,18 @@ function formatPhoneForSettings(user) {
   return countryCode ? `${countryCode} ${rawPhone}` : rawPhone;
 }
 
-function AccountModal({ type, onClose, currentPhone }) {
+function resolveCountryCodeForSettings(user) {
+  return String(user?.country_code ?? user?.dial_code ?? "").trim();
+}
+
+function AccountModal({ type, onClose, currentPhone, currentCountryCode, onPasswordChanged }) {
   const t = useTranslations("settings.modal");
+  const { data: countryOptions = [], isLoading: isLoadingCountries } = useGetCountriesQuery();
   const [sendPhoneOtpNew, { isLoading: isSendingPhoneOtp }] = useSendPhoneOtpNewMutation();
   const [confirmPhoneNew, { isLoading: isConfirmingPhoneOtp }] = useConfirmPhoneNewMutation();
   const [sendPasswordOtp, { isLoading: isSendingPasswordOtp }] = useSendPasswordOtpMutation();
   const [confirmPasswordOtp, { isLoading: isConfirmingPasswordOtp }] = useConfirmPasswordOtpMutation();
+  const [selectedCountryCode, setSelectedCountryCode] = useState(() => String(currentCountryCode ?? "").trim() || "+961");
   const [newPhone, setNewPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -82,6 +90,7 @@ function AccountModal({ type, onClose, currentPhone }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordOtpCode, setPasswordOtpCode] = useState("");
+  const [passwordOtpToken, setPasswordOtpToken] = useState("");
   const [isPasswordOtpSent, setIsPasswordOtpSent] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [passwordStatus, setPasswordStatus] = useState("");
@@ -103,19 +112,50 @@ function AccountModal({ type, onClose, currentPhone }) {
     return () => window.removeEventListener("keydown", onEscape);
   }, [onClose]);
 
+  const resolvedCountryOptions = useMemo(() => {
+    if (countryOptions.length > 0) return countryOptions;
+    return [{ value: "+961", label: "+961" }];
+  }, [countryOptions]);
+
+  const activeCountryCode = useMemo(() => {
+    const preferredCode = String(selectedCountryCode ?? "").trim();
+    if (resolvedCountryOptions.some((country) => country.value === preferredCode)) {
+      return preferredCode;
+    }
+
+    const currentCode = String(currentCountryCode ?? "").trim();
+    if (resolvedCountryOptions.some((country) => country.value === currentCode)) {
+      return currentCode;
+    }
+
+    if (resolvedCountryOptions.some((country) => country.value === "+961")) {
+      return "+961";
+    }
+
+    return resolvedCountryOptions[0]?.value ?? "";
+  }, [currentCountryCode, resolvedCountryOptions, selectedCountryCode]);
+
   if (!type || !config) return null;
 
   async function handleSendPhoneOtp() {
     const phone = String(newPhone ?? "").trim();
+    const countryCode = String(activeCountryCode ?? "").trim();
     if (!phone) {
       setPhoneError("Please enter a phone number.");
+      return;
+    }
+    if (!countryCode) {
+      setPhoneError("Please select a country code.");
       return;
     }
 
     setPhoneError("");
     setPhoneStatus("");
     try {
-      const response = await sendPhoneOtpNew({ phone }).unwrap();
+      const response = await sendPhoneOtpNew({
+        phone,
+        country_code: countryCode
+      }).unwrap();
       setIsOtpSent(true);
       setPhoneStatus(String(response?.message ?? "OTP sent to your new phone number."));
     } catch (error) {
@@ -130,15 +170,24 @@ function AccountModal({ type, onClose, currentPhone }) {
   async function handleConfirmPhoneOtp() {
     const phone = String(newPhone ?? "").trim();
     const otp = String(otpCode ?? "").trim();
+    const countryCode = String(activeCountryCode ?? "").trim();
     if (!phone || !otp) {
       setPhoneError("Please enter phone number and OTP code.");
+      return;
+    }
+    if (!countryCode) {
+      setPhoneError("Please select a country code.");
       return;
     }
 
     setPhoneError("");
     setPhoneStatus("");
     try {
-      const response = await confirmPhoneNew({ phone, otp }).unwrap();
+      const response = await confirmPhoneNew({
+        phone,
+        otp,
+        country_code: countryCode
+      }).unwrap();
       setPhoneStatus(String(response?.message ?? "Phone number updated."));
       onClose();
     } catch (error) {
@@ -168,6 +217,22 @@ function AccountModal({ type, onClose, currentPhone }) {
         new_password: newPassword,
         new_password_confirmation: confirmPassword
       }).unwrap();
+
+      const otpToken =
+        String(
+          response?.otp_token ??
+            response?.token ??
+            response?.data?.otp_token ??
+            response?.data?.token ??
+            ""
+        ).trim();
+      if (!otpToken) {
+        setPasswordError("Could not start password update. Please request OTP again.");
+        return;
+      }
+
+      setPasswordOtpToken(otpToken);
+      setPasswordOtpCode("");
       setIsPasswordOtpSent(true);
       setPasswordStatus(String(response?.message ?? "OTP sent for password change."));
     } catch (error) {
@@ -184,6 +249,10 @@ function AccountModal({ type, onClose, currentPhone }) {
       setPasswordError("Please enter OTP code.");
       return;
     }
+    if (!passwordOtpToken) {
+      setPasswordError("OTP session expired. Please request a new OTP.");
+      return;
+    }
 
     setPasswordError("");
     setPasswordStatus("");
@@ -192,9 +261,12 @@ function AccountModal({ type, onClose, currentPhone }) {
         current_password: currentPassword,
         new_password: newPassword,
         new_password_confirmation: confirmPassword,
-        otp: passwordOtpCode
+        code: passwordOtpCode.trim(),
+        otp: passwordOtpCode.trim(),
+        otp_token: passwordOtpToken.trim()
       }).unwrap();
-      setPasswordStatus(String(response?.message ?? "Password updated successfully."));
+      const successMessage = String(response?.message ?? "").trim();
+      onPasswordChanged?.(successMessage);
       onClose();
     } catch (error) {
       const message =
@@ -230,6 +302,19 @@ function AccountModal({ type, onClose, currentPhone }) {
               <label className="settings-account-field">
                 <span>{config.fields?.[0]?.label ?? "Current Phone"}</span>
                 <input type="text" value={currentPhone || config.fields?.[0]?.defaultValue || ""} readOnly />
+              </label>
+              <label className="settings-account-field">
+                <span>{t("phone.countryCodeLabel")}</span>
+                <CountryCodeSelect
+                  ariaLabel={t("phone.countryCodeLabel")}
+                  options={resolvedCountryOptions}
+                  value={activeCountryCode}
+                  onChange={(nextValue) => {
+                    setSelectedCountryCode(nextValue);
+                    if (phoneError) setPhoneError("");
+                  }}
+                  disabled={isLoadingCountries || resolvedCountryOptions.length === 0}
+                />
               </label>
               <label className="settings-account-field">
                 <span>{config.fields?.[1]?.label ?? "New Phone Number"}</span>
@@ -502,6 +587,7 @@ function SupportModal({ type, onClose }) {
 }
 
 export default function SettingsPage() {
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("settings");
@@ -509,6 +595,7 @@ export default function SettingsPage() {
   const currentUserPayload = useAppSelector(selectCurrentUser);
   const currentUser = unwrapCurrentUser(currentUserPayload);
   const currentPhone = formatPhoneForSettings(currentUser);
+  const currentCountryCode = resolveCountryCodeForSettings(currentUser);
 
   function readList(key) {
     const value = t.raw(key);
@@ -522,6 +609,7 @@ export default function SettingsPage() {
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isBlockedUsersOpen, setIsBlockedUsersOpen] = useState(false);
   const [activeSupportModal, setActiveSupportModal] = useState(null);
+  const [passwordChangedMessage, setPasswordChangedMessage] = useState("");
 
   function handleAccountClick(key) {
     if (key === "phone" || key === "password") {
@@ -540,12 +628,15 @@ export default function SettingsPage() {
   }
 
   async function handleLogout() {
+    const logoutRequest = logout();
+    clearStoredAuthToken();
+    dispatch(clearAuth());
+    router.replace("/login");
+
     try {
-      await logout().unwrap();
+      await logoutRequest.unwrap();
     } catch {
       // The logout mutation clears local auth state even if the server rejects the token.
-    } finally {
-      router.replace("/");
     }
   }
 
@@ -629,10 +720,53 @@ export default function SettingsPage() {
         type={activeAccountModal}
         onClose={() => setActiveAccountModal(null)}
         currentPhone={currentPhone}
+        currentCountryCode={currentCountryCode}
+        onPasswordChanged={(message) => {
+          const fallback = t("modal.password.changedPopupMessage");
+          setPasswordChangedMessage(message || fallback);
+        }}
       />
       <LanguageModal open={isLanguageModalOpen} onClose={() => setIsLanguageModalOpen(false)} />
       <BlockedUsersModal open={isBlockedUsersOpen} onClose={() => setIsBlockedUsersOpen(false)} />
       <SupportModal type={activeSupportModal} onClose={() => setActiveSupportModal(null)} />
+      {passwordChangedMessage ? (
+        <div className="settings-modal-overlay" role="presentation" onClick={() => setPasswordChangedMessage("")}>
+          <section
+            className="settings-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("modal.password.changedPopupTitle")}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="settings-account-modal-header">
+              <div>
+                <h3>{t("modal.password.changedPopupTitle")}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPasswordChangedMessage("")}
+                aria-label={t("modal.password.changedPopupConfirm")}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="settings-account-modal-body">
+              <p>{passwordChangedMessage}</p>
+            </div>
+
+            <footer className="settings-account-modal-footer">
+              <button
+                type="button"
+                className="settings-account-submit"
+                onClick={() => setPasswordChangedMessage("")}
+              >
+                {t("modal.password.changedPopupConfirm")}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
     </DashboardShell>
   );
 }

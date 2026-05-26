@@ -21,6 +21,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLogoutMutation } from "@/src/features/auth/authApi";
+import { clearAuth } from "@/src/features/auth/authSlice";
+import { clearStoredAuthToken } from "@/src/features/auth/tokenStorage";
 import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
 import {
   cacheRecentUserName,
@@ -271,13 +273,16 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
   }
 
   async function handleLogout() {
+    onCloseMobile?.();
+    const logoutRequest = logout();
+    clearStoredAuthToken();
+    dispatch(clearAuth());
+    router.replace("/login");
+
     try {
-      await logout().unwrap();
+      await logoutRequest.unwrap();
     } catch {
       // The logout mutation clears local auth state even if the server rejects the token.
-    } finally {
-      onCloseMobile?.();
-      router.replace("/");
     }
   }
 

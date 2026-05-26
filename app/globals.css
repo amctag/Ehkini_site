@@ -435,6 +435,29 @@ a {
   box-shadow: 0 10px 18px rgba(229, 102, 52, 0.25);
 }
 
+.auth-card .reset-link-button {
+  display: block;
+  width: max-content;
+  height: auto;
+  margin: -4px 0 18px auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--orange-dark);
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.auth-card .reset-link-button:hover {
+  color: var(--orange-dark);
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
 .auth-card button:active,
 .primary-button:active,
 .secondary-button:active {
@@ -5531,6 +5554,86 @@ a {
   color: #6b7280;
 }
 
+.settings-account-field .auth-country-select {
+  width: 100%;
+}
+
+.settings-account-field .auth-country-trigger {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  box-shadow: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: start;
+}
+
+.settings-account-field .auth-country-trigger:hover,
+.settings-account-field .auth-country-trigger[aria-expanded="true"] {
+  color: var(--ink);
+  background: #fff;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 121, 63, 0.16);
+}
+
+.settings-account-field .auth-country-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.settings-account-field .auth-country-trigger span {
+  min-width: 0;
+  display: inline;
+  margin: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 14px;
+  font-weight: inherit;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-account-field .auth-country-caret {
+  flex: 0 0 auto;
+  color: #8a92a6;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.settings-account-field .auth-country-menu button {
+  width: 100%;
+  min-height: 36px;
+  height: auto;
+  display: block;
+  padding: 9px 10px;
+  color: #293044;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: start;
+}
+
+.settings-account-field .auth-country-menu button:hover,
+.settings-account-field .auth-country-menu button.active {
+  color: var(--orange-dark);
+  background: #fff2ec;
+  box-shadow: none;
+}
+
 .settings-error-text {
   margin: 10px 0 0;
   color: #b42318;
@@ -5902,13 +6005,88 @@ a {
   }
 
   .friends-page {
-    margin: -16px -14px -32px;
-    padding: 0 14px 32px;
+    margin: -10px -10px -24px;
+    padding: 0 10px 24px;
   }
 
   .friends-toolbar {
-    margin: 0 -14px 16px;
-    padding: 16px 14px 12px;
+    margin: 0 -10px 14px;
+    padding: 12px 10px 10px;
+  }
+
+  .friends-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .friends-title-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .friends-search {
+    height: 40px;
+  }
+
+  .friends-filters {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .friends-filters button {
+    min-height: 34px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .friends-request-popup {
+    top: 4px;
+    margin: 8px 0 12px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .friends-request-popup button {
+    align-self: flex-end;
+  }
+
+  .friend-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .friend-card-header {
+    gap: 10px;
+  }
+
+  .friend-profile-link {
+    grid-template-columns: 52px 1fr;
+    gap: 10px;
+  }
+
+  .friend-avatar,
+  .friend-avatar img {
+    width: 52px;
+    height: 52px;
+  }
+
+  .friend-avatar-fallback {
+    width: 52px;
+    height: 52px;
+    font-size: 16px;
+  }
+
+  .friend-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+    padding-bottom: 12px;
   }
 
   .friends-grid,
@@ -5917,7 +6095,57 @@ a {
   }
 
   .friend-actions {
-    grid-template-columns: 1fr repeat(3, 36px);
+    grid-template-columns: 1fr repeat(3, 40px);
+    gap: 8px;
+  }
+
+  .friend-actions button,
+  .friend-actions a {
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .message-friend {
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .suggested-card {
+    grid-template-columns: 52px 1fr;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .suggested-avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .suggested-card button {
+    grid-column: 1 / -1;
+    min-height: 34px;
+  }
+
+  .friends-incoming-modal {
+    width: min(96vw, 430px);
+    max-height: 86vh;
+  }
+
+  .friends-incoming-row {
+    grid-template-columns: 40px 1fr;
+    align-items: start;
+  }
+
+  .friends-incoming-row img,
+  .friends-incoming-avatar-fallback {
+    width: 40px;
+    height: 40px;
+  }
+
+  .friends-incoming-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
   }
 
   .profile-summary-card,
@@ -6475,6 +6703,24 @@ a {
   .friend-actions button,
   .friend-actions a {
     height: 30px;
+  }
+
+  .friends-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .friends-incoming-row {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .friends-incoming-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .friends-incoming-actions button {
+    flex: 1;
   }
 
   .chat-actions {

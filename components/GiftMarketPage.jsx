@@ -3,8 +3,10 @@
 import { Gift } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { selectAuthToken } from "@/src/features/auth/authSlice";
 import { useGetGiftCategoriesQuery, useGetGiftsQuery } from "@/src/features/gifts/giftsApi";
 import { useGetWalletGiftTransactionsQuery } from "@/src/features/wallet/walletApi";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import DashboardShell from "./DashboardShell";
 import GiftCard from "./GiftCard";
 import GiftSendModal from "./GiftSendModal";
@@ -13,11 +15,18 @@ import SectionTitle from "./SectionTitle";
 export default function GiftMarketPage() {
   const t = useTranslations("giftMarket");
   const translationCategories = t.raw("categories");
+  const token = useAppSelector(selectAuthToken);
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedGift, setSelectedGift] = useState(null);
-  const { data: giftCategories = [] } = useGetGiftCategoriesQuery();
-  const { data: gifts = [], isFetching: isLoadingGifts, isError: isGiftsError } = useGetGiftsQuery();
-  const { data: walletGiftTransactions = [] } = useGetWalletGiftTransactionsQuery();
+  const { data: giftCategories = [] } = useGetGiftCategoriesQuery(undefined, {
+    skip: !token
+  });
+  const { data: gifts = [], isFetching: isLoadingGifts, isError: isGiftsError } = useGetGiftsQuery(undefined, {
+    skip: !token
+  });
+  const { data: walletGiftTransactions = [] } = useGetWalletGiftTransactionsQuery(undefined, {
+    skip: !token
+  });
   const sentGiftsCount = useMemo(
     () =>
       walletGiftTransactions.filter(

@@ -6,18 +6,26 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGetMeQuery } from "@/src/features/auth/authApi";
+import { selectAuthToken } from "@/src/features/auth/authSlice";
 import { useGetDiscoverStoriesQuery } from "@/src/features/discover/discoverApi";
 import { useCreateStoryMutation, useDeleteStoryMutation, useGetStoryViewsQuery } from "@/src/features/stories/storiesApi";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
 export default function StoriesPage() {
   const t = useTranslations("stories");
   const router = useRouter();
+  const token = useAppSelector(selectAuthToken);
   const actions = t.raw("actions");
   const friendStories = t.raw("friendStories");
-  const { data: meData } = useGetMeQuery();
-  const { data: allStories = [] } = useGetDiscoverStoriesQuery();
+  const { data: meData } = useGetMeQuery(undefined, {
+    skip: !token
+  });
+  const { data: allStories = [] } = useGetDiscoverStoriesQuery(undefined, {
+    skip: !token
+  });
   const galleryInputRef = useRef(null);
   const videoRef = useRef(null);
   const [createStory, { isLoading: isUploading }] = useCreateStoryMutation();
@@ -36,7 +44,7 @@ export default function StoriesPage() {
     isFetching: isFetchingStoryViewers,
     isError: isStoryViewersError
   } = useGetStoryViewsQuery(viewersStoryId, {
-    skip: !viewersStoryId
+    skip: !token || !viewersStoryId
   });
 
   const currentUserId = useMemo(() => {
@@ -209,8 +217,7 @@ export default function StoriesPage() {
       setStoryStatus(String(response?.message ?? t("publishSuccess")));
       clearSelectedMedia();
     } catch (error) {
-      const message = error?.data?.message ?? error?.error ?? t("publishError");
-      setStoryError(String(message));
+      setStoryError(getErrorMessage(error, t("publishError")));
     }
   }
 
@@ -226,8 +233,7 @@ export default function StoriesPage() {
       setStoryStatus(String(response?.message ?? t("deleteSuccess")));
       setViewersStoryId((current) => (current === idText ? null : current));
     } catch (error) {
-      const message = error?.data?.message ?? error?.error ?? t("deleteError");
-      setStoryError(String(message));
+      setStoryError(getErrorMessage(error, t("deleteError")));
     } finally {
       setDeletingStoryId(null);
     }

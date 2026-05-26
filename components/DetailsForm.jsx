@@ -12,6 +12,7 @@ import {
 } from "@/src/features/auth/authApi";
 import { updateSignupDraft } from "@/src/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 
 const fallbackInterests = [
   { id: 2, name: "Travel" },
@@ -32,7 +33,7 @@ function getMutationMessage(error, fallback) {
     .flat()
     .find(Boolean);
 
-  return firstValidationError ?? error?.data?.message ?? error?.data?.error ?? fallback;
+  return firstValidationError ?? getErrorMessage(error, fallback);
 }
 
 function hasAuthToken(payload) {

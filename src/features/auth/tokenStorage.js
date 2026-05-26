@@ -1,4 +1,5 @@
 export const AUTH_TOKEN_KEY = "ehkini_auth_token";
+const LEGACY_AUTH_TOKEN_KEYS = ["token", AUTH_TOKEN_KEY];
 const AUTH_TOKEN_COOKIE_PATH = "path=/";
 const AUTH_TOKEN_COOKIE_SAME_SITE = "samesite=lax";
 const AUTH_TOKEN_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
@@ -43,5 +44,11 @@ export function storeAuthToken(token) {
 }
 
 export function clearStoredAuthToken() {
+  if (typeof window !== "undefined") {
+    LEGACY_AUTH_TOKEN_KEYS.forEach((key) => {
+      window.localStorage.removeItem(key);
+    });
+  }
+
   storeAuthToken(null);
 }

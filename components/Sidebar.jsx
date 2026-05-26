@@ -20,8 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLogoutMutation } from "@/src/features/auth/authApi";
-import { clearAuth } from "@/src/features/auth/authSlice";
+import { clearAuth, selectAuthToken } from "@/src/features/auth/authSlice";
 import { clearStoredAuthToken } from "@/src/features/auth/tokenStorage";
 import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
 import {
@@ -101,6 +100,7 @@ function formatUserLabel(user, cachedNameById, fallbackIndex = 0) {
 export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMobile }) {
   const t = useTranslations("sidebar");
   const dispatch = useAppDispatch();
+  const token = useAppSelector(selectAuthToken);
   const recentNameById = useAppSelector(selectRecentUserNameMap);
   const recentSearchRows = useAppSelector(selectRecentSearchRows);
   const router = useRouter();
@@ -109,7 +109,7 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [saveUserSearchClick] = useSaveUserSearchClickMutation();
   const [triggerSearchUsersByName] = useLazySearchUsersQuery();
   const [removeUserSearchClick, { isLoading: isRemovingRecent }] = useRemoveUserSearchClickMutation();
@@ -148,20 +148,20 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
   const isCreateExpanded = isCreateOpen || isCreateSectionActive;
 
   const { data: searchUsersData, isFetching: isSearchingUsers } = useSearchUsersQuery(debouncedQuery, {
-    skip: !isSearchOpen || debouncedQuery.length === 0
+    skip: !token || !isSearchOpen || debouncedQuery.length === 0
   });
   const { data: recentUsersData, isFetching: isLoadingRecentUsers, refetch: refetchRecentUsers } = useGetLastSearchedUsersQuery(undefined, {
-    skip: !isSearchOpen,
+    skip: !token || !isSearchOpen,
     refetchOnMountOrArgChange: true
   });
-  const searchUsers = Array.isArray(searchUsersData) ? searchUsersData : EMPTY_USERS;
+  const searchUsers = Array.isArray(searchUsersData) ? searchUsersData : (searchUsersData?.users ?? EMPTY_USERS);
   const recentUsers = Array.isArray(recentUsersData) ? recentUsersData : EMPTY_USERS;
 
   useEffect(() => {
-    if (isSearchOpen) {
+    if (token && isSearchOpen) {
       refetchRecentUsers();
     }
-  }, [isSearchOpen, refetchRecentUsers]);
+  }, [isSearchOpen, refetchRecentUsers, token]);
 
   const showingSearchResults = debouncedQuery.length > 0;
   const sidebarUsers = useMemo(() => (showingSearchResults ? searchUsers : recentSearchRows), [
@@ -189,7 +189,7 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
   ]);
 
   useEffect(() => {
-    if (!isSearchOpen || showingSearchResults || !recentSearchRows.length) return;
+    if (!token || !isSearchOpen || showingSearchResults || !recentSearchRows.length) return;
 
     const unresolvedRows = recentSearchRows.filter((row) => {
       const idKey = String(row?.user_id ?? row?.id ?? "").trim();
@@ -209,9 +209,10 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
     (async () => {
       for (const searchName of uniqueSearchNames) {
         try {
-          const users = await triggerSearchUsersByName(searchName, false).unwrap();
+          const searchResponse = await triggerSearchUsersByName(searchName, false).unwrap();
           if (cancelled) return;
 
+          const users = Array.isArray(searchResponse) ? searchResponse : (searchResponse?.users ?? []);
           const matches = users.filter((user) =>
             unresolvedIds.has(String(user?.user_id ?? user?.id ?? "").trim())
           );
@@ -228,7 +229,7 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
     return () => {
       cancelled = true;
     };
-  }, [dispatch, isSearchOpen, recentNameById, recentSearchRows, showingSearchResults, triggerSearchUsersByName]);
+  }, [dispatch, isSearchOpen, recentNameById, recentSearchRows, showingSearchResults, token, triggerSearchUsersByName]);
 
   async function handlePickUser(user) {
     const userId = user?.user_id ?? user?.id ?? user?.searched_user_id ?? user?.target_user_id ?? null;
@@ -272,18 +273,14 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
     }
   }
 
-  async function handleLogout() {
+  function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
     onCloseMobile?.();
-    const logoutRequest = logout();
     clearStoredAuthToken();
     dispatch(clearAuth());
     router.replace("/login");
-
-    try {
-      await logoutRequest.unwrap();
-    } catch {
-      // The logout mutation clears local auth state even if the server rejects the token.
-    }
   }
 
   return (
@@ -300,6 +297,11 @@ export default function Sidebar({ activePageKey, isMobileOpen = false, onCloseMo
           <Search size={17} />
           <input
             type="search"
+            name="ehkini_sidebar_user_search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchAriaLabel")}
             value={searchQuery}

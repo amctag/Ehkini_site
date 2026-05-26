@@ -2,9 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 import { clearAuth } from "@/src/features/auth/authSlice";
 
 const initialState = {
-  list: [],
-  status: "idle",
-  error: null,
+  filters: {
+    q: "",
+    gender: "",
+    country_id: "",
+    min_age: "",
+    max_age: "",
+    interests: []
+  },
+  cursor: null,
   recentNameById: {},
   recentSearchRows: []
 };
@@ -22,10 +28,19 @@ const usersSlice = createSlice({
   name: "users",
   initialState,
   reducers: {
-    setUsers(state, action) {
-      state.list = action.payload;
-      state.status = "succeeded";
-      state.error = null;
+    setUserSearchFilters(state, action) {
+      state.filters = {
+        ...initialState.filters,
+        ...(action.payload ?? {}),
+        interests: Array.isArray(action.payload?.interests) ? action.payload.interests : []
+      };
+      state.cursor = null;
+    },
+    setUserSearchCursor(state, action) {
+      state.cursor = action.payload ?? null;
+    },
+    resetUserSearchCursor(state) {
+      state.cursor = null;
     },
     cacheRecentUserName(state, action) {
       const id = action.payload?.id ?? action.payload?.user_id;
@@ -124,7 +139,9 @@ const usersSlice = createSlice({
 });
 
 export const {
-  setUsers,
+  setUserSearchFilters,
+  setUserSearchCursor,
+  resetUserSearchCursor,
   cacheRecentUserName,
   cacheRecentUserNames,
   setRecentSearchRows,
@@ -143,5 +160,7 @@ export const selectRecentUserNameById = (state, id) => {
 
 export const selectRecentUserNameMap = (state) => state.users?.recentNameById ?? {};
 export const selectRecentSearchRows = (state) => state.users?.recentSearchRows ?? [];
+export const selectUserSearchFilters = (state) => state.users?.filters ?? initialState.filters;
+export const selectUserSearchCursor = (state) => state.users?.cursor ?? null;
 
 export default usersSlice.reducer;

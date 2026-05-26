@@ -203,6 +203,12 @@ export const settingsApi = api.injectEndpoints({
         method: "POST",
         body: buildPasswordOtpConfirmPayload(input)
       })
+    }),
+    deactivateAccount: builder.mutation({
+      query: () => ({
+        url: "account/deactivate",
+        method: "POST"
+      })
     })
   })
 });
@@ -213,5 +219,6 @@ export const {
   useSendPhoneOtpNewMutation,
   useConfirmPhoneNewMutation,
   useSendPasswordOtpMutation,
-  useConfirmPasswordOtpMutation
+  useConfirmPasswordOtpMutation,
+  useDeactivateAccountMutation
 } = settingsApi;

@@ -1,4 +1,5 @@
 import { api } from "@/src/services/baseApi";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import {
   clearAuth,
   clearSignupDraft,
@@ -127,11 +128,7 @@ export const authApi = api.injectEndpoints({
             })
           );
         } catch (err) {
-          const message =
-            err.error?.data?.message ??
-            err.error?.data?.error ??
-            "Login failed";
-          dispatch(setAuthError(message));
+          dispatch(setAuthError(getErrorMessage(err.error ?? err, "Login failed")));
         }
       }
     }),
@@ -241,8 +238,7 @@ export const authApi = api.injectEndpoints({
           clearStoredAuthToken();
           dispatch(clearAuth());
         }
-      },
-      invalidatesTags: ["User"]
+      }
     })
   })
 });

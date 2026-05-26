@@ -36,12 +36,23 @@ const rawBaseQuery = fetchBaseQuery({
   }
 });
 
-async function realBaseQuery(args, api, extraOptions) {
-  const result = await rawBaseQuery(args, api, extraOptions);
+async function realBaseQuery(args, baseQueryApi, extraOptions) {
+  if (!publicEndpoints.has(baseQueryApi.endpoint) && !baseQueryApi.getState().auth?.token) {
+    return {
+      error: {
+        status: 401,
+        data: {
+          message: "Unauthorized"
+        }
+      }
+    };
+  }
+
+  const result = await rawBaseQuery(args, baseQueryApi, extraOptions);
 
   if (result.error?.status === 401) {
     clearStoredAuthToken();
-    api.dispatch(clearAuth());
+    baseQueryApi.dispatch(clearAuth());
   }
 
   return result;
@@ -52,6 +63,6 @@ export const baseQuery = useMock ? mockBaseQuery : realBaseQuery;
 export const api = createApi({
   reducerPath: "api",
   baseQuery,
-  tagTypes: ["User", "UserSearch", "Profile", "Discover", "Messages", "Friends", "Gifts", "Wallet"],
+  tagTypes: ["User", "UserSearch", "Profile", "Discover", "Messages", "Friends", "Gifts", "Wallet", "Posts"],
   endpoints: () => ({})
 });

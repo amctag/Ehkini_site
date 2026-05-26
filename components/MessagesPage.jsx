@@ -45,7 +45,15 @@ export default function MessagesPage() {
           <aside className="conversation-list">
             <label className="message-search">
               <Search size={18} />
-              <input type="search" placeholder={t("searchPlaceholder")} />
+              <input
+                type="search"
+                name="ehkini_message_search"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder={t("searchPlaceholder")}
+              />
             </label>
 
             <div className="conversation-items">

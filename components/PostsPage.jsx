@@ -1,10 +1,11 @@
 "use client";
 
-import { Image as ImageIcon, PenSquare, SmilePlus } from "lucide-react";
+import { Image as ImageIcon, PenSquare, SmilePlus, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useCreatePostMutation } from "@/src/features/posts/postsApi";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
@@ -52,6 +53,18 @@ export default function PostsPage() {
 
     const previewUrl = URL.createObjectURL(file);
     setSelectedMedia({ file, previewUrl });
+    event.target.value = "";
+  }
+
+  function clearSelectedMedia() {
+    if (selectedMedia?.previewUrl) {
+      URL.revokeObjectURL(selectedMedia.previewUrl);
+    }
+
+    setSelectedMedia(null);
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = "";
+    }
   }
 
   function triggerPicker() {
@@ -80,8 +93,7 @@ export default function PostsPage() {
       setSelectedMedia(null);
       setCaption("");
     } catch (error) {
-      const message = error?.data?.message ?? error?.error ?? t("publishError");
-      setPostError(String(message));
+      setPostError(getErrorMessage(error, t("publishError")));
     }
   }
 
@@ -121,6 +133,14 @@ export default function PostsPage() {
             <div className="post-selected-media">
               <p>{t("selectedFile", { name: selectedMedia.file.name })}</p>
               <div className="post-media-preview-wrap">
+                <button
+                  type="button"
+                  className="story-selected-remove"
+                  onClick={clearSelectedMedia}
+                  aria-label={t("removeSelectedAria")}
+                >
+                  <X size={14} />
+                </button>
                 <Image
                   src={selectedMedia.previewUrl}
                   alt={t("selectedPreviewAlt")}

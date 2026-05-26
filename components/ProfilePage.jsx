@@ -1,15 +1,16 @@
 "use client";
 
-import { Camera, Edit, Gift, Images, MapPin, PenSquare, X } from "lucide-react";
+import { Camera, Edit, Gift, Images, MapPin, MoreVertical, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useGetCountriesQuery, useGetInterestsQuery } from "@/src/features/auth/authApi";
-import { selectCurrentUser } from "@/src/features/auth/authSlice";
-import { useGetUserPostsQuery } from "@/src/features/posts/postsApi";
+import { selectAuthToken, selectCurrentUser } from "@/src/features/auth/authSlice";
+import { useDeletePostMutation, useGetUserPostsQuery } from "@/src/features/posts/postsApi";
 import { useUpdateProfileMutation } from "@/src/features/profiles/profilesApi";
 import { useGetWalletGiftTransactionsQuery } from "@/src/features/wallet/walletApi";
 import { useAppSelector } from "@/src/hooks/reduxHooks";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import DashboardShell from "./DashboardShell";
 
 function unwrapCurrentUser(payload) {
@@ -60,6 +61,32 @@ function formatMemberSince(value, fallback) {
 function mapPhotoUrl(photo) {
   if (typeof photo === "string") return validImageUrl(photo);
   return validImageUrl(photo?.url ?? photo?.image_url ?? photo?.photo_url ?? photo?.path);
+}
+
+function uniquePhotoEntries(entries) {
+  const bySrc = new Map();
+
+  entries.forEach((entry) => {
+    const src = validImageUrl(entry?.src);
+    if (!src) return;
+
+    const caption = String(entry?.caption ?? "").trim();
+    const existing = bySrc.get(src);
+    const shouldPreferEntry =
+      !existing ||
+      (existing.kind !== "post" && entry?.kind === "post") ||
+      (!existing.caption && caption);
+
+    if (shouldPreferEntry) {
+      bySrc.set(src, {
+        ...entry,
+        src,
+        caption
+      });
+    }
+  });
+
+  return [...bySrc.values()];
 }
 
 function fullNameFromParts(value, fallback = "") {
@@ -165,17 +192,6 @@ function mapGiftItem(gift) {
 }
 
 function formatGiftTransactionDate(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-}
-
-function formatPostDate(value) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
@@ -342,11 +358,7 @@ function EditProfileModal({ open, onClose, profile, user }) {
       }).unwrap();
       onClose();
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.error ??
-        "Could not update profile. Please try again.";
-      setSaveError(String(message));
+      setSaveError(getErrorMessage(error, "Could not update profile. Please try again."));
     }
   }
 
@@ -532,8 +544,63 @@ function GiftTransactionsModal({ open, onClose, transactions }) {
   );
 }
 
+function ProfilePhotoViewer({ photo, onClose, onDelete, isDeleting = false, deleteError = "" }) {
+  const t = useTranslations("profile");
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+
+  if (!photo) return null;
+  const canDelete = Boolean(photo.postId && onDelete);
+
+  return (
+    <div className="profile-photo-modal-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="profile-photo-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={photo.caption || t("photoViewerTitle")}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="profile-photo-modal-close"
+          onClick={onClose}
+          aria-label={t("closePhotoViewerAria")}
+        >
+          <X size={20} />
+        </button>
+        {canDelete ? (
+          <div className="profile-photo-modal-actions">
+            <button
+              type="button"
+              className="profile-photo-modal-more"
+              onClick={() => setIsActionsOpen((value) => !value)}
+              aria-label={t("photoActionsAria")}
+              aria-expanded={isActionsOpen}
+            >
+              <MoreVertical size={20} />
+            </button>
+            {isActionsOpen ? (
+              <div className="profile-photo-modal-menu">
+                <button type="button" onClick={onDelete} disabled={isDeleting}>
+                  {isDeleting ? t("deletingPhoto") : t("deletePhoto")}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        <div className="profile-photo-modal-media">
+          <Image src={photo.src} alt={photo.caption || t("photoViewerTitle")} fill unoptimized sizes="75vw" />
+        </div>
+        <p className="profile-photo-modal-caption">{photo.caption || t("photoViewerEmptyCaption")}</p>
+        {deleteError ? <p className="profile-photo-modal-error">{deleteError}</p> : null}
+      </section>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const t = useTranslations("profile");
+  const token = useAppSelector(selectAuthToken);
   const currentUser = useAppSelector(selectCurrentUser);
   const currentUserData = unwrapCurrentUser(currentUser);
   const profileUserId = resolveUserId(currentUserData);
@@ -543,14 +610,30 @@ export default function ProfilePage() {
     isFetching: isUserPostsLoading,
     isError: isUserPostsError
   } = useGetUserPostsQuery(profileUserId, {
-    skip: !profileUserId
+    skip: !token || !profileUserId
   });
   const {
     data: walletGiftTransactions = [],
     isFetching: isGiftTransactionsLoading,
     isError: isGiftTransactionsError
-  } = useGetWalletGiftTransactionsQuery();
+  } = useGetWalletGiftTransactionsQuery(undefined, {
+    skip: !token
+  });
+  const [deletePost, { isLoading: isDeletingPost }] = useDeletePostMutation();
   const photos = profile.photos;
+  const photoEntries = uniquePhotoEntries([
+    ...photos.map((photo, index) => ({
+      src: photo,
+      caption: t("photoViewerFallbackCaption", { index: index + 1 }),
+      kind: "profile"
+    })),
+    ...userPosts.map((post) => ({
+      src: post.image,
+      caption: post.caption,
+      kind: "post",
+      postId: post.id
+    }))
+  ]);
   const mappedWalletGiftTransactions = walletGiftTransactions.map(mapWalletGiftTransactionToGiftItem);
   const hasWalletGiftTransactions = mappedWalletGiftTransactions.length > 0;
   const allGiftTransactions = hasWalletGiftTransactions ? mappedWalletGiftTransactions : profile.receivedGifts;
@@ -584,6 +667,20 @@ export default function ProfilePage() {
   ];
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isGiftTransactionsOpen, setIsGiftTransactionsOpen] = useState(false);
+  const [activePhoto, setActivePhoto] = useState(null);
+  const [deletePhotoError, setDeletePhotoError] = useState("");
+
+  async function handleDeleteActivePost() {
+    if (!activePhoto?.postId) return;
+
+    setDeletePhotoError("");
+    try {
+      await deletePost(activePhoto.postId).unwrap();
+      setActivePhoto(null);
+    } catch (error) {
+      setDeletePhotoError(getErrorMessage(error, t("deletePhotoError")));
+    }
+  }
 
   return (
     <DashboardShell activePageKey="profile" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
@@ -626,70 +723,42 @@ export default function ProfilePage() {
           </div>
         </article>
 
-        <article className={`profile-posts-panel ${userPosts.length === 0 ? "compact-empty" : ""}`}>
-          <h2>
-            <PenSquare size={20} />
-            {t("postsHeading")}
-          </h2>
-          {isUserPostsLoading && userPosts.length === 0 ? (
-            <p className="profile-section-empty">{t("postsLoading")}</p>
-          ) : null}
-          {isUserPostsError && userPosts.length === 0 ? (
-            <p className="profile-section-empty">{t("postsLoadError")}</p>
-          ) : null}
-          {userPosts.length > 0 ? (
-            <div className="profile-posts-list">
-              {userPosts.map((post, index) => {
-                const imageUrl = validImageUrl(post.image);
-                const hasImage = Boolean(imageUrl);
-
-                return (
-                  <article className={`profile-post-card ${hasImage ? "" : "no-image"}`} key={post.id || `profile-post-${index}`}>
-                    {hasImage ? (
-                      <div className="profile-post-media">
-                        <Image
-                          src={imageUrl}
-                          alt={t("postImageAlt", { index: index + 1 })}
-                          fill
-                          unoptimized
-                          sizes="(max-width: 620px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        />
-                      </div>
-                    ) : null}
-                    <div className="profile-post-body">
-                      {post.caption ? <p className="profile-post-caption">{post.caption}</p> : null}
-                      {post.createdAt ? <small className="profile-post-date">{formatPostDate(post.createdAt)}</small> : null}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            !isUserPostsLoading && !isUserPostsError ? <p className="profile-section-empty">{t("emptyPosts")}</p> : null
-          )}
-        </article>
-
-        <article className={`profile-photos-panel ${photos.length === 0 ? "compact-empty" : ""}`}>
+        <article className={`profile-photos-panel ${photoEntries.length === 0 ? "compact-empty" : ""}`}>
           <h2>
             <Images size={20} />
             {t("photosHeading")}
           </h2>
-          {photos.length > 0 ? (
+          {isUserPostsLoading && photoEntries.length === 0 ? (
+            <p className="profile-section-empty">{t("postsLoading")}</p>
+          ) : null}
+          {isUserPostsError && photoEntries.length === 0 ? (
+            <p className="profile-section-empty">{t("postsLoadError")}</p>
+          ) : null}
+          {photoEntries.length > 0 ? (
             <div className="profile-photos-grid">
-              {photos.map((photo, index) => (
-                <div className={index === 0 ? "main-photo" : ""} key={`profile-photo-${index}`}>
+              {photoEntries.map((photo, index) => (
+                <button
+                  type="button"
+                  className={`profile-photo-tile ${index === 0 ? "main-photo" : ""}`}
+                  key={`profile-photo-${photo.src}-${index}`}
+                  onClick={() => {
+                    setDeletePhotoError("");
+                    setActivePhoto(photo);
+                  }}
+                  aria-label={photo.caption || t("photoAlt", { index: index + 1 })}
+                >
                   <Image
-                    src={photo}
+                    src={photo.src}
                     alt={t("photoAlt", { index: index + 1 })}
                     fill
                     unoptimized
                     sizes="(max-width: 620px) 100vw, 50vw"
                   />
-                </div>
+                </button>
               ))}
             </div>
           ) : (
-            <p className="profile-section-empty">{t("emptyPhotos")}</p>
+            !isUserPostsLoading && !isUserPostsError ? <p className="profile-section-empty">{t("emptyPhotos")}</p> : null
           )}
         </article>
 
@@ -759,6 +828,13 @@ export default function ProfilePage() {
           transactions={allGiftTransactions}
         />
       ) : null}
+      <ProfilePhotoViewer
+        photo={activePhoto}
+        onClose={() => setActivePhoto(null)}
+        onDelete={handleDeleteActivePost}
+        isDeleting={isDeletingPost}
+        deleteError={deletePhotoError}
+      />
     </DashboardShell>
   );
 }

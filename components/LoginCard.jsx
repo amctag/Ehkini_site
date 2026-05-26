@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import {
   useGetCountriesQuery,
   useLoginMutation
 } from "@/src/features/auth/authApi";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import CountryCodeSelect from "./CountryCodeSelect";
 
 function getFirstValidationMessage(errors) {
@@ -32,15 +34,15 @@ function getLoginErrorMessage(error, t) {
     return getFirstValidationMessage(error?.data?.errors) || t("validationFailed");
   }
 
-  return error?.data?.message ?? error?.data?.error ?? t("loginFailed");
+  return getErrorMessage(error, t("loginFailed"));
 }
 
 function getApiErrorMessage(error, fallbackMessage) {
   if (error?.status === 422) {
-    return getFirstValidationMessage(error?.data?.errors) || error?.data?.message || fallbackMessage;
+    return getFirstValidationMessage(error?.data?.errors) || getErrorMessage(error, fallbackMessage);
   }
 
-  return error?.data?.message ?? error?.data?.error ?? error?.error ?? fallbackMessage;
+  return getErrorMessage(error, fallbackMessage);
 }
 
 export default function LoginCard() {
@@ -50,6 +52,7 @@ export default function LoginCard() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [formErrorTone, setFormErrorTone] = useState("warning");
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotStep, setForgotStep] = useState("otp");
   const [forgotCountryCode, setForgotCountryCode] = useState("+961");
@@ -119,6 +122,7 @@ export default function LoginCard() {
   function clearFormError() {
     if (formError) {
       setFormError("");
+      setFormErrorTone("warning");
     }
   }
 
@@ -258,6 +262,14 @@ export default function LoginCard() {
   async function handleSubmit(event) {
     event.preventDefault();
     setFormError("");
+    setFormErrorTone("warning");
+
+    if (!phone.trim() || !password.trim()) {
+      setFormErrorTone("danger");
+      setFormError(t("requiredLoginFields"));
+      return;
+    }
+
     const payload = {
       country_code: selectedCountryCode.trim(),
       phone: phone.trim(),
@@ -268,13 +280,14 @@ export default function LoginCard() {
       await login(payload).unwrap();
       router.replace("/discover");
     } catch (error) {
-      setFormError(String(getLoginErrorMessage(error, t)));
+      setFormErrorTone("warning");
+      setFormError(getLoginErrorMessage(error, t));
     }
   }
 
   return (
     <>
-      <form className="auth-card" onSubmit={handleSubmit}>
+      <form className="auth-card" onSubmit={handleSubmit} noValidate>
         <div className="card-heading">
           <h2>{t("title")}</h2>
           <p>{t("subtitle")}</p>
@@ -307,7 +320,6 @@ export default function LoginCard() {
                 setPhone(event.target.value);
                 clearFormError();
               }}
-              required
             />
           </label>
         </div>
@@ -324,7 +336,6 @@ export default function LoginCard() {
               setPassword(event.target.value);
               clearFormError();
             }}
-            required
           />
         </label>
 
@@ -337,11 +348,11 @@ export default function LoginCard() {
         </button>
 
         {formError ? (
-          <div className="auth-error-popup" role="alert" aria-live="polite">
+          <div className={`auth-error-popup ${formErrorTone === "danger" ? "danger" : ""}`} role="alert" aria-live="polite">
             <span className="auth-error-dot" aria-hidden="true" />
             <span className="auth-error-copy">
               <strong>{formError}</strong>
-              <small>{t("tryAnotherCredential")}</small>
+              <small>{formErrorTone === "danger" ? t("requiredLoginFieldsHint") : t("tryAnotherCredential")}</small>
             </span>
             <button
               className="auth-error-close"
@@ -349,7 +360,7 @@ export default function LoginCard() {
               onClick={() => setFormError("")}
               aria-label={t("dismissError")}
             >
-              x
+              <X size={16} />
             </button>
           </div>
         ) : null}

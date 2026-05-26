@@ -30,6 +30,8 @@
     "loggingInButton": "Logging in...",
     "invalidPassword": "كلمة المرور غير صحيحة",
     "tryAnotherCredential": "جرّب كلمة مرور أو رقم هاتف آخر.",
+    "requiredLoginFields": "Phone number and password are required.",
+    "requiredLoginFieldsHint": "Fill in both fields before signing in.",
     "validationFailed": "يرجى التحقق من رقم الهاتف وكلمة المرور.",
     "loginFailed": "Login failed",
     "dismissError": "إغلاق خطأ تسجيل الدخول",
@@ -263,6 +265,23 @@
     "search": "Search",
     "searchPlaceholder": "Search by name, bio, or interests",
     "filters": "Filters",
+    "activeFilters": "{count} active",
+    "advancedFilters": {
+      "title": "Match filters",
+      "subtitle": "Tune the list, then apply",
+      "gender": "Gender",
+      "genders": {
+        "any": "Any",
+        "female": "Women",
+        "male": "Men"
+      },
+      "country": "Country",
+      "anyCountry": "Any country",
+      "ageRange": "Age {min}-{max}",
+      "interests": "Interests",
+      "reset": "Reset",
+      "apply": "Apply filters"
+    },
     "filterOptions": {
       "all": "All users",
       "age18to25": "Age 18-25",
@@ -900,6 +919,14 @@
     "emptyPhotos": "No photos yet.",
     "postImageAlt": "Post image {index}",
     "photoAlt": "Profile photo {index}",
+    "photoViewerTitle": "صورة الملف الشخصي",
+    "photoViewerFallbackCaption": "صورة الملف الشخصي {index}",
+    "photoViewerEmptyCaption": "لا يوجد وصف للصورة.",
+    "closePhotoViewerAria": "إغلاق عارض الصور",
+    "photoActionsAria": "إجراءات الصورة",
+    "deletePhoto": "حذف الصورة",
+    "deletingPhoto": "جاري الحذف...",
+    "deletePhotoError": "تعذر حذف الصورة. حاول مرة أخرى.",
     "photos": [
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=420&q=80",
@@ -1203,6 +1230,10 @@
     },
     "emptyField": "Not provided",
     "photoAlt": "{name} photo {index}",
+    "photoViewerTitle": "صورة الملف الشخصي",
+    "photoViewerFallbackCaption": "صورة الملف الشخصي {index}",
+    "photoViewerEmptyCaption": "لا يوجد وصف للصورة.",
+    "closePhotoViewerAria": "إغلاق عارض الصور",
     "fallbackName": "Profile",
     "fallbackAbout": "Open to new friendships, shared hobbies, and meaningful conversations with kind people.",
     "fallbackInterests": [
@@ -1329,6 +1360,7 @@
     "selectMediaFirst": "Select an image first.",
     "selectedFile": "Selected file: {name}",
     "selectedPreviewAlt": "Selected media preview",
+    "removeSelectedAria": "Remove selected image",
     "captionLabel": "Caption",
     "captionPlaceholder": "Write your caption here...",
     "emojiHint": "Add emoji",
@@ -1342,3 +1374,5 @@
     ]
   }
 }
+
+

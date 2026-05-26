@@ -59,9 +59,7 @@ export default function CountryCodeSelect({
         onClick={() => setIsOpen((current) => !current)}
       >
         <span>{selectedOption?.label ?? value}</span>
-        <span className="auth-country-caret" aria-hidden="true">
-          v
-        </span>
+        <span className="auth-country-caret" aria-hidden="true" />
       </button>
 
       {isOpen ? (

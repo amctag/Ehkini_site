@@ -110,7 +110,8 @@ export function mapStoryToDiscoverCard(story) {
 
 /** Map AMC v2 user row to Discover ProfileCard shape */
 export function mapUserToDiscoverCard(user) {
-  const name = [user.first_name, user.last_name].filter(Boolean).join(" ").trim() || "User";
+  const firstLastName = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
+  const name = firstLastName || String(user.full_name ?? user.name ?? "User").trim() || "User";
   const interestNames = (user.interests ?? []).map(interestLabel).filter(Boolean);
   const tags =
     interestNames.length > 2

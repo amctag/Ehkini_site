@@ -17,18 +17,20 @@ import {
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { useGetCountriesQuery, useLogoutMutation } from "@/src/features/auth/authApi";
+import { useGetCountriesQuery } from "@/src/features/auth/authApi";
 import {
   useConfirmPasswordOtpMutation,
   useConfirmPhoneNewMutation,
   useGetBlockedUsersQuery,
+  useDeactivateAccountMutation,
   useSendPasswordOtpMutation,
   useSendPhoneOtpNewMutation,
   useUnblockUserMutation
 } from "@/src/features/settings/settingsApi";
-import { clearAuth, selectCurrentUser } from "@/src/features/auth/authSlice";
+import { clearAuth, selectAuthToken, selectCurrentUser } from "@/src/features/auth/authSlice";
 import { clearStoredAuthToken } from "@/src/features/auth/tokenStorage";
 import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import CountryCodeSelect from "./CountryCodeSelect";
 import DashboardShell from "./DashboardShell";
 
@@ -159,11 +161,7 @@ function AccountModal({ type, onClose, currentPhone, currentCountryCode, onPassw
       setIsOtpSent(true);
       setPhoneStatus(String(response?.message ?? "OTP sent to your new phone number."));
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.error ??
-        "Could not send OTP. Please try again.";
-      setPhoneError(String(message));
+      setPhoneError(getErrorMessage(error, "Could not send OTP. Please try again."));
     }
   }
 
@@ -191,11 +189,7 @@ function AccountModal({ type, onClose, currentPhone, currentCountryCode, onPassw
       setPhoneStatus(String(response?.message ?? "Phone number updated."));
       onClose();
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.error ??
-        "Could not confirm OTP. Please try again.";
-      setPhoneError(String(message));
+      setPhoneError(getErrorMessage(error, "Could not confirm OTP. Please try again."));
     }
   }
 
@@ -236,11 +230,7 @@ function AccountModal({ type, onClose, currentPhone, currentCountryCode, onPassw
       setIsPasswordOtpSent(true);
       setPasswordStatus(String(response?.message ?? "OTP sent for password change."));
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.error ??
-        "Could not send password OTP. Please try again.";
-      setPasswordError(String(message));
+      setPasswordError(getErrorMessage(error, "Could not send password OTP. Please try again."));
     }
   }
 
@@ -269,11 +259,7 @@ function AccountModal({ type, onClose, currentPhone, currentCountryCode, onPassw
       onPasswordChanged?.(successMessage);
       onClose();
     } catch (error) {
-      const message =
-        error?.data?.message ??
-        error?.error ??
-        "Could not confirm password OTP. Please try again.";
-      setPasswordError(String(message));
+      setPasswordError(getErrorMessage(error, "Could not confirm password OTP. Please try again."));
     }
   }
 
@@ -480,8 +466,9 @@ function LanguageModal({ open, onClose }) {
 
 function BlockedUsersModal({ open, onClose }) {
   const t = useTranslations("settings.blockedUsersModal");
+  const token = useAppSelector(selectAuthToken);
   const { data: users = [], isLoading, isError } = useGetBlockedUsersQuery(undefined, {
-    skip: !open
+    skip: !token || !open
   });
   const [unblockUser, { isLoading: isUnblocking }] = useUnblockUserMutation();
 
@@ -591,7 +578,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("settings");
-  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [deactivateAccount, { isLoading: isDeactivatingAccount }] = useDeactivateAccountMutation();
   const currentUserPayload = useAppSelector(selectCurrentUser);
   const currentUser = unwrapCurrentUser(currentUserPayload);
   const currentPhone = formatPhoneForSettings(currentUser);
@@ -610,6 +598,9 @@ export default function SettingsPage() {
   const [isBlockedUsersOpen, setIsBlockedUsersOpen] = useState(false);
   const [activeSupportModal, setActiveSupportModal] = useState(null);
   const [passwordChangedMessage, setPasswordChangedMessage] = useState("");
+  const [accountActionError, setAccountActionError] = useState("");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   function handleAccountClick(key) {
     if (key === "phone" || key === "password") {
@@ -627,16 +618,26 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleLogout() {
-    const logoutRequest = logout();
+  function handleLogout() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
     clearStoredAuthToken();
     dispatch(clearAuth());
     router.replace("/login");
+  }
 
+  async function handleDeactivateAccount() {
+    if (isDeactivatingAccount || isLoggingOut) return;
+
+    setAccountActionError("");
     try {
-      await logoutRequest.unwrap();
-    } catch {
-      // The logout mutation clears local auth state even if the server rejects the token.
+      await deactivateAccount().unwrap();
+      clearStoredAuthToken();
+      dispatch(clearAuth());
+      router.replace("/login");
+    } catch (error) {
+      setAccountActionError(getErrorMessage(error, "Could not delete account. Please try again."));
     }
   }
 
@@ -708,11 +709,21 @@ export default function SettingsPage() {
             <LogOut size={15} />
             {isLoggingOut ? `${t("actions.logout")}...` : t("actions.logout")}
           </button>
-          <button type="button" className="settings-action-button danger">
+          <button
+            type="button"
+            className="settings-action-button danger"
+            onClick={() => {
+              setAccountActionError("");
+              setDeleteConfirmText("");
+              setIsDeleteConfirmOpen(true);
+            }}
+            disabled={isDeactivatingAccount || isLoggingOut}
+          >
             <Trash2 size={15} />
-            {t("actions.deleteAccount")}
+            {isDeactivatingAccount ? `${t("actions.deleteAccount")}...` : t("actions.deleteAccount")}
           </button>
         </div>
+        {accountActionError ? <p className="settings-error-text">{accountActionError}</p> : null}
       </section>
 
       <AccountModal
@@ -729,6 +740,63 @@ export default function SettingsPage() {
       <LanguageModal open={isLanguageModalOpen} onClose={() => setIsLanguageModalOpen(false)} />
       <BlockedUsersModal open={isBlockedUsersOpen} onClose={() => setIsBlockedUsersOpen(false)} />
       <SupportModal type={activeSupportModal} onClose={() => setActiveSupportModal(null)} />
+      {isDeleteConfirmOpen ? (
+        <div className="settings-modal-overlay" role="presentation" onClick={() => setIsDeleteConfirmOpen(false)}>
+          <section
+            className="settings-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("actions.deleteAccount")}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="settings-account-modal-header">
+              <div>
+                <h3>{t("actions.deleteAccount")}</h3>
+                <p>Type DELETE to confirm account deletion.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                aria-label={t("modal.cancel")}
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="settings-account-modal-body">
+              <label className="settings-account-field">
+                <span>Confirmation</span>
+                <input
+                  value={deleteConfirmText}
+                  onChange={(event) => setDeleteConfirmText(event.target.value)}
+                  placeholder="DELETE"
+                  autoComplete="off"
+                />
+              </label>
+              {accountActionError ? <p className="settings-error-text">{accountActionError}</p> : null}
+            </div>
+
+            <footer className="settings-account-modal-footer">
+              <button
+                type="button"
+                className="settings-account-cancel"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                disabled={isDeactivatingAccount}
+              >
+                {t("modal.cancel")}
+              </button>
+              <button
+                type="button"
+                className="settings-account-submit danger"
+                onClick={handleDeactivateAccount}
+                disabled={deleteConfirmText !== "DELETE" || isDeactivatingAccount}
+              >
+                {isDeactivatingAccount ? `${t("actions.deleteAccount")}...` : t("actions.deleteAccount")}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
       {passwordChangedMessage ? (
         <div className="settings-modal-overlay" role="presentation" onClick={() => setPasswordChangedMessage("")}>
           <section

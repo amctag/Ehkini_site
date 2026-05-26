@@ -16,7 +16,10 @@ import {
   useSendFriendRequestMutation,
   useSearchFriendsQuery
 } from "@/src/features/friends/friendsApi";
+import { selectAuthToken } from "@/src/features/auth/authSlice";
 import { useBlockUserMutation, useReportUserMutation } from "@/src/features/users/usersApi";
+import { useAppSelector } from "@/src/hooks/reduxHooks";
+import { getErrorMessage } from "@/src/utils/getErrorMessage";
 import DashboardShell from "./DashboardShell";
 import SectionTitle from "./SectionTitle";
 
@@ -232,9 +235,9 @@ function FriendCard({ friend, pendingAction, onRemoveFriend, onBlockUser, onRepo
         <button className="video-friend" type="button" aria-label={t("friend.videoAria", { name: friend.name })}>
           <Video size={17} />
         </button>
-        <button className="gift-friend" type="button" aria-label={t("friend.giftAria", { name: friend.name })}>
+        <Link className="gift-friend" href="/gifts" aria-label={t("friend.giftAria", { name: friend.name })}>
           <Gift size={17} />
-        </button>
+        </Link>
       </div>
     </article>
   );
@@ -259,14 +262,18 @@ function buildSuggestionCard(suggestion, index, t) {
     source.friend_id ??
     source.id ??
     null;
+  const rawRelationStatus = source.relation_status ?? source.relationStatus ?? null;
+  const hasRelationStatus = rawRelationStatus !== null && rawRelationStatus !== undefined && String(rawRelationStatus).trim() !== "";
   const normalizedStatus = normalizeFriendshipStatus(
-    source.friendshipStatus ??
+    rawRelationStatus ??
+      source.friendshipStatus ??
       source.friendship_status ??
       source.relationship_status ??
       source.request_status ??
       source.friend_request_status ??
       source.status
   );
+  const relationStatus = normalizedStatus || "none";
   const isFriend =
     toBoolean(source.isFriend ?? source.is_friend ?? source.friends_with_me) || isFriendStatus(normalizedStatus);
   const isRequestSentRaw = toBoolean(
@@ -278,7 +285,9 @@ function buildSuggestionCard(suggestion, index, t) {
       source.canCancel ??
       source.can_cancel
   );
-  const isRequestSent = !isFriend && (isRequestSentRaw || isSentStatus(normalizedStatus));
+  const isRequestSent = !isFriend && (
+    hasRelationStatus ? relationStatus === "outgoing_request" : isRequestSentRaw || isSentStatus(normalizedStatus)
+  );
 
   return {
     id: source.userId ?? source.user_id ?? source.id ?? `suggested-${index}`,
@@ -295,6 +304,8 @@ function buildSuggestionCard(suggestion, index, t) {
     initials: source.initials ?? initials,
     tone,
     image: source.image ?? source.avatar ?? source.profile_image_url ?? "",
+    relationStatus,
+    hasRelationStatus,
     isFriend,
     isRequestSent
   };
@@ -305,7 +316,10 @@ function SuggestedFriendCard({ suggestion, onOpenProfile, onToggleRequest, pendi
   const hasImage = typeof suggestion.image === "string" && suggestion.image.trim().length > 0;
   const isFriend = resolvedState?.isFriend ?? false;
   const isSent = resolvedState?.isSent ?? false;
+  const relationStatus = resolvedState?.relationStatus ?? suggestion.relationStatus ?? "none";
   const isBusy = pendingState?.suggestionKey === suggestionStateKey(suggestion) && pendingState?.inFlight;
+  const isCanceling = isBusy && pendingState?.action === "cancel";
+  const isSending = isBusy && pendingState?.action === "send";
 
   function handleCardClick(event) {
     const interactiveTarget = event.target.closest("button, a, input, textarea, select");
@@ -337,7 +351,15 @@ function SuggestedFriendCard({ suggestion, onOpenProfile, onToggleRequest, pendi
         disabled={isFriend || isBusy}
       >
         <UserPlus size={16} />
-        {isFriend ? t("alreadyFriend") : isSent ? (isBusy ? t("cancelingRequest") : t("requestSent")) : (isBusy ? t("sendingRequest") : t("addFriend"))}
+        {isFriend
+          ? t("alreadyFriend")
+          : isCanceling
+            ? t("cancelingRequest")
+            : isSending
+              ? t("sendingRequest")
+              : isSent || relationStatus === "outgoing_request"
+                ? "Requested"
+                : t("addFriend")}
       </button>
     </article>
   );
@@ -346,6 +368,7 @@ function SuggestedFriendCard({ suggestion, onOpenProfile, onToggleRequest, pendi
 export default function FriendsPage() {
   const t = useTranslations("friends");
   const router = useRouter();
+  const token = useAppSelector(selectAuthToken);
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
@@ -354,6 +377,8 @@ export default function FriendsPage() {
   const [requestPopupMessage, setRequestPopupMessage] = useState("");
   const [isIncomingRequestsOpen, setIsIncomingRequestsOpen] = useState(false);
   const [pendingIncomingAction, setPendingIncomingAction] = useState(null);
+  const [onlineOnly, setOnlineOnly] = useState(false);
+  const [sort, setSort] = useState("default");
   const [removeFriend] = useRemoveFriendMutation();
   const [sendFriendRequest] = useSendFriendRequestMutation();
   const [cancelFriendRequest] = useCancelFriendRequestMutation();
@@ -365,7 +390,7 @@ export default function FriendsPage() {
     isFetching: isIncomingRequestsFetching,
     isError: isIncomingRequestsError
   } = useGetIncomingFriendRequestsQuery(undefined, {
-    skip: !isIncomingRequestsOpen
+    skip: !token || !isIncomingRequestsOpen
   });
 
   useEffect(() => {
@@ -381,17 +406,35 @@ export default function FriendsPage() {
     data: allFriends = [],
     isError: isFriendsError,
     isLoading: isFriendsLoading
-  } = useGetFriendsQuery();
+  } = useGetFriendsQuery(undefined, {
+    skip: !token
+  });
   const {
     data: searchedFriends = [],
     isError: isSearchError,
     isFetching: isSearchFetching
   } = useSearchFriendsQuery(debouncedSearch, {
-    skip: !isSearching
+    skip: !token || !isSearching
   });
-  const { data: suggestedFriendsData = [] } = useGetFriendSuggestionsQuery();
+  const { data: suggestedFriendsData = [] } = useGetFriendSuggestionsQuery(undefined, {
+    skip: !token
+  });
 
   const friends = isSearching ? searchedFriends : allFriends;
+  const displayedFriends = useMemo(() => {
+    const sourceFriends = Array.isArray(friends) ? friends : [];
+    const filteredFriends = onlineOnly
+      ? sourceFriends.filter((friend) => friend?.isOnline === true || friend?.is_online === true)
+      : sourceFriends;
+
+    if (sort !== "az") return filteredFriends;
+
+    return [...filteredFriends].sort((firstFriend, secondFriend) => {
+      const firstName = String(firstFriend?.first_name ?? firstFriend?.name ?? "").trim();
+      const secondName = String(secondFriend?.first_name ?? secondFriend?.name ?? "").trim();
+      return firstName.localeCompare(secondName);
+    });
+  }, [friends, onlineOnly, sort]);
   const isLoading = isSearching ? isSearchFetching : isFriendsLoading;
   const isError = isSearching ? isSearchError : isFriendsError;
   const suggestions = Array.isArray(suggestedFriendsData)
@@ -431,22 +474,29 @@ export default function FriendsPage() {
       return {
         isFriend: Boolean(override.isFriend),
         isSent: Boolean(override.isSent),
-        friendshipId: override.friendshipId ?? null
+        friendshipId: override.friendshipId ?? null,
+        relationStatus: override.relationStatus ?? (override.isSent ? "outgoing_request" : "none")
       };
     }
 
     const receiverId = String(suggestion?.receiverId ?? suggestion?.profileId ?? suggestion?.id ?? "").trim();
     const isFriend = Boolean(suggestion?.isFriend) || (receiverId ? friendIdSet.has(receiverId) : false);
+    const relationStatus = suggestion?.relationStatus ?? "none";
     return {
       isFriend,
-      isSent: !isFriend && Boolean(suggestion?.isRequestSent),
-      friendshipId: suggestion?.friendshipId ?? null
+      isSent: !isFriend && (
+        suggestion?.hasRelationStatus
+          ? relationStatus === "outgoing_request"
+          : relationStatus === "outgoing_request" || Boolean(suggestion?.isRequestSent)
+      ),
+      friendshipId: suggestion?.friendshipId ?? null,
+      relationStatus
     };
   }
 
   const visibleSuggestions = suggestions.filter((suggestion) => {
     const state = resolveSuggestionState(suggestion);
-    return !state.isSent;
+    return !state.isFriend;
   });
 
   async function handleToggleSuggestedRequest(suggestion) {
@@ -458,26 +508,58 @@ export default function FriendsPage() {
 
     const state = resolveSuggestionState(suggestion);
     if (state.isFriend) return;
+    if (state.relationStatus !== "none" && state.relationStatus !== "outgoing_request" && !state.isSent) return;
 
-    setPendingSuggestionAction({ suggestionKey, inFlight: true });
+    const previousOverride = suggestionOverrides[suggestionKey] ?? null;
+
     try {
-      if (state.isSent) {
-        const payload = state.friendshipId ? { friendship_id: state.friendshipId } : { receiver_id: receiverId };
-        await cancelFriendRequest(payload).unwrap();
+      if (state.relationStatus === "outgoing_request" || state.isSent) {
+        setPendingSuggestionAction({ suggestionKey, inFlight: true, action: "cancel" });
         setSuggestionOverrides((current) => ({
           ...current,
-          [suggestionKey]: { isFriend: false, isSent: false, friendshipId: null }
+          [suggestionKey]: { isFriend: false, isSent: false, relationStatus: "none", friendshipId: null }
         }));
+
+        await cancelFriendRequest({ receiver_id: receiverId }).unwrap();
       } else {
+        setPendingSuggestionAction({ suggestionKey, inFlight: true, action: "send" });
+        setSuggestionOverrides((current) => ({
+          ...current,
+          [suggestionKey]: {
+            isFriend: false,
+            isSent: true,
+            relationStatus: "outgoing_request",
+            friendshipId: state.friendshipId ?? null
+          }
+        }));
+
         const response = await sendFriendRequest({ receiver_id: receiverId }).unwrap();
         const nextFriendshipId = response?.friendship_id ?? response?.data?.friendship_id ?? null;
         setSuggestionOverrides((current) => ({
           ...current,
-          [suggestionKey]: { isFriend: false, isSent: true, friendshipId: nextFriendshipId }
+          [suggestionKey]: {
+            isFriend: false,
+            isSent: true,
+            relationStatus: "outgoing_request",
+            friendshipId: nextFriendshipId ?? state.friendshipId ?? null
+          }
         }));
       }
     } catch (error) {
-      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      setSuggestionOverrides((current) => {
+        if (previousOverride) {
+          return {
+            ...current,
+            [suggestionKey]: previousOverride
+          };
+        }
+
+        const next = { ...current };
+        delete next[suggestionKey];
+        return next;
+      });
+
+      const message = getErrorMessage(error, "");
       const normalizedMessage = message.toLowerCase();
       const isAlreadySent =
         normalizedMessage.includes("already") && normalizedMessage.includes("sent");
@@ -487,6 +569,7 @@ export default function FriendsPage() {
           [suggestionKey]: {
             isFriend: false,
             isSent: true,
+            relationStatus: "outgoing_request",
             friendshipId: state.friendshipId ?? null
           }
         }));
@@ -510,7 +593,7 @@ export default function FriendsPage() {
         setRequestPopupMessage(t("reportSubmittedPopup"));
       }
     } catch (error) {
-      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      const message = getErrorMessage(error, "");
       setRequestPopupMessage(message || t("requestActionError"));
       console.error(`Failed to ${action} friend`, error);
     } finally {
@@ -549,7 +632,7 @@ export default function FriendsPage() {
         action
       }).unwrap();
     } catch (error) {
-      const message = String(error?.data?.message ?? error?.error ?? "").trim();
+      const message = getErrorMessage(error, "");
       setRequestPopupMessage(message || t("incomingRespondError"));
     } finally {
       setPendingIncomingAction((current) =>
@@ -641,7 +724,7 @@ export default function FriendsPage() {
               <button type="button" className="incoming-requests-pill" onClick={() => setIsIncomingRequestsOpen(true)}>
                 {t("incomingRequestsLabel")}
               </button>
-              <span>{t("friendsCount", { count: friends.length })}</span>
+              <span>{t("friendsCount", { count: displayedFriends.length })}</span>
             </div>
           </div>
 
@@ -649,6 +732,11 @@ export default function FriendsPage() {
             <Search size={18} />
             <input
               type="search"
+              name="ehkini_friends_search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               placeholder={t("searchPlaceholder")}
@@ -656,9 +744,30 @@ export default function FriendsPage() {
           </label>
 
           <div className="friends-filters">
-            <button type="button">{t("filters.onlineOnly")}</button>
-            <button type="button">{t("filters.recent")}</button>
-            <button type="button">{t("filters.alphabetical")}</button>
+            <button
+              type="button"
+              className={onlineOnly ? "active" : ""}
+              aria-pressed={onlineOnly}
+              onClick={() => setOnlineOnly((current) => !current)}
+            >
+              {t("filters.onlineOnly")}
+            </button>
+            <button
+              type="button"
+              className={sort === "default" ? "active" : ""}
+              aria-pressed={sort === "default"}
+              onClick={() => setSort("default")}
+            >
+              {t("filters.recent")}
+            </button>
+            <button
+              type="button"
+              className={sort === "az" ? "active" : ""}
+              aria-pressed={sort === "az"}
+              onClick={() => setSort((current) => (current === "az" ? "default" : "az"))}
+            >
+              {t("filters.alphabetical")}
+            </button>
           </div>
         </div>
 
@@ -670,13 +779,13 @@ export default function FriendsPage() {
           <div className="friends-state error">{t("friendsLoadError")}</div>
         ) : null}
 
-        {!isLoading && !isError && friends.length === 0 ? (
+        {!isLoading && !isError && displayedFriends.length === 0 ? (
           <div className="friends-state">{t("emptyFriends")}</div>
         ) : null}
 
-        {!isLoading && !isError && friends.length > 0 ? (
+        {!isLoading && !isError && displayedFriends.length > 0 ? (
           <div className="friends-grid">
-            {friends.map((friend) => (
+            {displayedFriends.map((friend) => (
               <FriendCard
                 friend={friend}
                 key={friend.id}

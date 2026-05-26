@@ -10,13 +10,15 @@ import {
   MessageCircle,
   Phone,
   UserPlus,
-  Video
+  Video,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { mockProfilesBySlug } from "@/mocks/data/profiles/by-slug";
+import { selectAuthToken } from "@/src/features/auth/authSlice";
 import {
   useGetFriendsQuery,
   useCancelFriendRequestMutation,
@@ -76,6 +78,26 @@ function validImageUrl(value) {
   return "";
 }
 
+function uniquePhotoEntries(entries) {
+  const bySrc = new Map();
+
+  entries.forEach((entry) => {
+    const src = validImageUrl(entry?.src);
+    if (!src) return;
+
+    const caption = String(entry?.caption ?? "").trim();
+    const existing = bySrc.get(src);
+    if (!existing || (!existing.caption && caption)) {
+      bySrc.set(src, {
+        src,
+        caption
+      });
+    }
+  });
+
+  return [...bySrc.values()];
+}
+
 function receiverIdOf(profile, slug) {
   const rawId = profile?.id ?? profile?.userId ?? profile?.user_id ?? slug;
   const idText = normalizeId(rawId);
@@ -103,6 +125,37 @@ function isSentStatus(status) {
     status === "awaiting_response" ||
     status === "outgoing_pending" ||
     status === "pending_outgoing"
+  );
+}
+
+function ProfilePhotoViewer({ photo, onClose }) {
+  const t = useTranslations("profileView");
+
+  if (!photo) return null;
+
+  return (
+    <div className="profile-photo-modal-overlay" role="presentation" onClick={onClose}>
+      <section
+        className="profile-photo-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={photo.caption || t("photoViewerTitle")}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="profile-photo-modal-close"
+          onClick={onClose}
+          aria-label={t("closePhotoViewerAria")}
+        >
+          <X size={20} />
+        </button>
+        <div className="profile-photo-modal-media">
+          <Image src={photo.src} alt={photo.caption || t("photoViewerTitle")} fill unoptimized sizes="75vw" />
+        </div>
+        <p className="profile-photo-modal-caption">{photo.caption || t("photoViewerEmptyCaption")}</p>
+      </section>
+    </div>
   );
 }
 
@@ -136,6 +189,7 @@ export default function ProfileViewPage({ slug }) {
   const fallbackName = t("fallbackName");
   const fallbackAbout = t("fallbackAbout");
   const fallbackInterests = t.raw("fallbackInterests");
+  const token = useAppSelector(selectAuthToken);
 
   const safeSlug = typeof slug === "string" ? slug.toLowerCase() : "";
   const defaultProfile = {
@@ -154,31 +208,37 @@ export default function ProfileViewPage({ slug }) {
       fallbackName
     },
     {
-      skip: !safeSlug
+      skip: !token || !safeSlug
     }
   );
   const profile =
     cachedProfile ??
     fetchedProfile ??
     buildFallbackProfile(safeSlug, defaultProfile, fallbackName);
-  const { data: friends = [] } = useGetFriendsQuery();
+  const { data: friends = [] } = useGetFriendsQuery(undefined, {
+    skip: !token
+  });
   const receiverId = receiverIdOf(profile, safeSlug);
   const {
     data: userPosts = []
   } = useGetUserPostsQuery(receiverId, {
-    skip: !receiverId
+    skip: !token || !receiverId
   });
-  const photosWithPosts = [
-    ...(Array.isArray(profile?.photos) ? profile.photos : []),
-    ...userPosts.map((post) => post?.image)
-  ]
-    .map(validImageUrl)
-    .filter(Boolean)
-    .filter((value, index, list) => list.indexOf(value) === index);
+  const photoEntries = uniquePhotoEntries([
+    ...(Array.isArray(profile?.photos) ? profile.photos : []).map((photo, index) => ({
+      src: photo,
+      caption: t("photoViewerFallbackCaption", { index: index + 1 })
+    })),
+    ...userPosts.map((post) => ({
+      src: post?.image,
+      caption: post?.caption
+    }))
+  ]);
   const [sendFriendRequest, { isLoading: isSendingFriendRequest }] = useSendFriendRequestMutation();
   const [cancelFriendRequest, { isLoading: isCancelingFriendRequest }] = useCancelFriendRequestMutation();
   const [friendshipOverride, setFriendshipOverride] = useState(null);
   const [friendRequestMessage, setFriendRequestMessage] = useState("");
+  const [activePhoto, setActivePhoto] = useState(null);
   const receiverKey = String(receiverId ?? "");
   const receiverIdKey = normalizeId(receiverId);
   const isFriendFromFriendsList = Boolean(
@@ -205,10 +265,6 @@ export default function ProfileViewPage({ slug }) {
   return (
     <DashboardShell activePageKey="discover" title={t("pageTitle")} subtitle={t("pageSubtitle")}>
       <section className="profile-view-page">
-        <div className="profile-view-cover">
-          <Image src={profile.cover} alt={t("coverAlt", { name: profile.name })} fill sizes="100vw" unoptimized />
-        </div>
-
         <div className="profile-view-head">
           <div className="profile-view-avatar">
             <Image src={profile.avatar} alt={profile.name} width={100} height={100} unoptimized />
@@ -363,21 +419,28 @@ export default function ProfileViewPage({ slug }) {
           <article className="profile-view-card photos">
             <h3>{t("sections.photos")}</h3>
             <div className="profile-view-photos">
-              {photosWithPosts.map((photo, index) => (
-                <div className={index === 0 ? "main-photo" : ""} key={`${profile.name}-photo-${index}`}>
+              {photoEntries.map((photo, index) => (
+                <button
+                  type="button"
+                  className={`profile-photo-tile ${index === 0 ? "main-photo" : ""}`}
+                  key={`${profile.name}-photo-${photo.src}-${index}`}
+                  onClick={() => setActivePhoto(photo)}
+                  aria-label={photo.caption || t("photoAlt", { name: profile.name, index: index + 1 })}
+                >
                   <Image
-                    src={photo}
+                    src={photo.src}
                     alt={t("photoAlt", { name: profile.name, index: index + 1 })}
                     fill
                     unoptimized
                     sizes="(max-width: 860px) 100vw, 33vw"
                   />
-                </div>
+                </button>
               ))}
             </div>
           </article>
         </div>
       </section>
+      <ProfilePhotoViewer photo={activePhoto} onClose={() => setActivePhoto(null)} />
     </DashboardShell>
   );
 }

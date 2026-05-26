@@ -1,7 +1,7 @@
 import { LoaderCircle, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { selectCurrentUser } from "@/src/features/auth/authSlice";
+import { selectAuthToken, selectCurrentUser } from "@/src/features/auth/authSlice";
 import { useSendGiftMutation } from "@/src/features/gifts/giftsApi";
 import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
 import { cacheRecentUserName, upsertRecentSearchRow } from "@/src/features/users/usersSlice";
@@ -15,6 +15,7 @@ function normalizeId(value) {
 export default function GiftSendModal({ open, gift, onClose }) {
   const t = useTranslations("giftSendModal");
   const dispatch = useAppDispatch();
+  const token = useAppSelector(selectAuthToken);
   const currentUserPayload = useAppSelector(selectCurrentUser);
   const currentUser =
     currentUserPayload?.user ??
@@ -38,9 +39,13 @@ export default function GiftSendModal({ open, gift, onClose }) {
     return () => window.clearTimeout(timer);
   }, [recipientQuery]);
 
-  const { data: users = [], isFetching } = useSearchUsersQuery(debouncedQuery, {
-    skip: !open || debouncedQuery.length === 0
+  const { data: usersData, isFetching } = useSearchUsersQuery(debouncedQuery, {
+    skip: !token || !open || debouncedQuery.length === 0
   });
+  const users = useMemo(
+    () => (Array.isArray(usersData) ? usersData : (usersData?.users ?? [])),
+    [usersData]
+  );
   const selectedRecipientId =
     selectedRecipient?.receiver_id ??
     selectedRecipient?.receiverId ??
@@ -96,6 +101,11 @@ export default function GiftSendModal({ open, gift, onClose }) {
                 <Search size={16} />
                 <input
                   type="search"
+                  name="ehkini_gift_recipient_search"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   value={recipientQuery}
                   onChange={(event) => {
                     const nextValue = event.target.value;

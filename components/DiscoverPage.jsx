@@ -5,11 +5,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useGetCountriesQuery, useGetInterestsQuery } from "@/src/features/auth/authApi";
+import { selectAuthToken } from "@/src/features/auth/authSlice";
 import {
   useGetDiscoverPeopleQuery,
   useGetDiscoverStoriesQuery
 } from "@/src/features/discover/discoverApi";
 import PeopleGridSkeleton from "@/src/features/discover/components/PeopleGridSkeleton";
+import { mapUserToDiscoverCard } from "@/src/features/discover/discoverMappers";
+import { useSearchUsersQuery } from "@/src/features/users/usersApi";
+import {
+  selectUserSearchCursor,
+  setUserSearchFilters
+} from "@/src/features/users/usersSlice";
+import { useAppDispatch, useAppSelector } from "@/src/hooks/reduxHooks";
 import DashboardShell from "./DashboardShell";
 import ProfileAvatarPlaceholder from "./ProfileAvatarPlaceholder";
 import SectionTitle from "./SectionTitle";
@@ -127,7 +136,10 @@ function StoryViewer({ storyGroup, activeIndex, onClose, onPrevious, onNext }) {
 function Stories() {
   const router = useRouter();
   const t = useTranslations("discover");
-  const { data: storyItems = [] } = useGetDiscoverStoriesQuery();
+  const token = useAppSelector(selectAuthToken);
+  const { data: storyItems = [] } = useGetDiscoverStoriesQuery(undefined, {
+    skip: !token
+  });
   const [activeGroupIndex, setActiveGroupIndex] = useState(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
 
@@ -325,28 +337,124 @@ function ProfileCard({ person }) {
   );
 }
 
+function filtersForDiscoverKey(filterKey) {
+  if (filterKey === "age18to25") {
+    return { min_age: 18, max_age: 25 };
+  }
+  if (filterKey === "age26to30") {
+    return { min_age: 26, max_age: 30 };
+  }
+  if (filterKey === "age31Plus") {
+    return { min_age: 31 };
+  }
+
+  return {};
+}
+
+const defaultDiscoverFilters = {
+  q: "",
+  gender: "",
+  country_id: "",
+  min_age: "",
+  max_age: "",
+  interests: []
+};
+
+const ageRangeLimits = {
+  min: 18,
+  max: 80
+};
+
+function normalizeDiscoverFilters(filters) {
+  return {
+    ...defaultDiscoverFilters,
+    ...(filters ?? {}),
+    interests: Array.isArray(filters?.interests) ? filters.interests : []
+  };
+}
+
+function hasSearchFilters(filters) {
+  return Object.values(filters).some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== null && value !== undefined && String(value).trim() !== "";
+  });
+}
+
+function countSearchFilters(filters) {
+  const normalized = normalizeDiscoverFilters(filters);
+  return [
+    normalized.q,
+    normalized.gender,
+    normalized.country_id,
+    normalized.min_age || normalized.max_age,
+    normalized.interests.length > 0 ? normalized.interests : ""
+  ].filter((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return String(value ?? "").trim() !== "";
+  }).length;
+}
+
 function People() {
   const t = useTranslations("discover");
-  const { data: people = [], isLoading, isError } = useGetDiscoverPeopleQuery();
-  const [query, setQuery] = useState("");
-  const [filterKey, setFilterKey] = useState("all");
+  const dispatch = useAppDispatch();
+  const token = useAppSelector(selectAuthToken);
+  const cursor = useAppSelector(selectUserSearchCursor);
+  const [draftFilters, setDraftFilters] = useState(defaultDiscoverFilters);
+  const [appliedFilters, setAppliedFilters] = useState(defaultDiscoverFilters);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { data: countries = [] } = useGetCountriesQuery(undefined, {
+    skip: !isFilterOpen
+  });
+  const { data: interests = [] } = useGetInterestsQuery(undefined, {
+    skip: !isFilterOpen
+  });
   const filterRef = useRef(null);
+  const activeFilters = useMemo(() => normalizeDiscoverFilters(appliedFilters), [appliedFilters]);
+  const isFiltering = hasSearchFilters(activeFilters);
+  const activeFilterCount = countSearchFilters(activeFilters);
+  const draftMinAge = Number(draftFilters.min_age || ageRangeLimits.min);
+  const draftMaxAge = Number(draftFilters.max_age || ageRangeLimits.max);
+  const visibleInterests = useMemo(() => interests.slice(0, 12), [interests]);
+  const searchArgs = useMemo(
+    () => ({
+      ...activeFilters,
+      cursor
+    }),
+    [activeFilters, cursor]
+  );
+  const {
+    currentData: searchData,
+    isLoading,
+    isFetching,
+    isError
+  } = useSearchUsersQuery(searchArgs, {
+    skip: !token || !isFiltering
+  });
+  const {
+    data: allPeople = [],
+    isLoading: isLoadingAllPeople,
+    isError: isAllPeopleError
+  } = useGetDiscoverPeopleQuery(undefined, {
+    skip: !token || isFiltering
+  });
+  const people = useMemo(
+    () => (isFiltering ? (searchData?.users ?? []).map(mapUserToDiscoverCard) : allPeople),
+    [allPeople, isFiltering, searchData]
+  );
 
-  const filterOptions = useMemo(
+  const filterPresets = useMemo(
     () => [
-      { key: "all", label: t("filterOptions.all") },
-      { key: "age18to25", label: t("filterOptions.age18to25") },
-      { key: "age26to30", label: t("filterOptions.age26to30") },
-      { key: "age31Plus", label: t("filterOptions.age31Plus") },
-      { key: "nearby", label: t("filterOptions.nearby") }
+      { key: "all", label: t("filterOptions.all"), filters: defaultDiscoverFilters },
+      { key: "age18to25", label: t("filterOptions.age18to25"), filters: filtersForDiscoverKey("age18to25") },
+      { key: "age26to30", label: t("filterOptions.age26to30"), filters: filtersForDiscoverKey("age26to30") },
+      { key: "age31Plus", label: t("filterOptions.age31Plus"), filters: filtersForDiscoverKey("age31Plus") }
     ],
     [t]
   );
 
   const activeFilterLabel = useMemo(
-    () => filterOptions.find((option) => option.key === filterKey)?.label ?? t("filters"),
-    [filterOptions, filterKey, t]
+    () => (activeFilterCount > 0 ? t("activeFilters", { count: activeFilterCount }) : t("filters")),
+    [activeFilterCount, t]
   );
 
   useEffect(() => {
@@ -370,41 +478,47 @@ function People() {
     };
   }, []);
 
-  const filteredPeople = useMemo(() => {
-    const loweredQuery = query.trim().toLowerCase();
+  useEffect(() => {
+    dispatch(setUserSearchFilters(activeFilters));
+  }, [activeFilters, dispatch]);
 
-    return people.filter((person) => {
-      const name = person.name ?? "";
-      const bio = person.bio ?? "";
-      const distance = person.distance ?? "";
-      const tags = Array.isArray(person.tags) ? person.tags.join(" ") : "";
-      const searchTarget = `${name} ${bio} ${distance} ${tags}`.toLowerCase();
+  function updateDraftFilter(key, value) {
+    setDraftFilters((current) => ({
+      ...current,
+      [key]: value
+    }));
+  }
 
-      if (loweredQuery && !searchTarget.includes(loweredQuery)) {
-        return false;
-      }
+  function toggleDraftInterest(interestId) {
+    const nextInterest = String(interestId ?? "").trim();
+    if (!nextInterest) return;
 
-      const numericAge = Number(person.age);
-      const hasAge = Number.isFinite(numericAge);
-
-      if (filterKey === "age18to25") {
-        return hasAge && numericAge >= 18 && numericAge <= 25;
-      }
-      if (filterKey === "age26to30") {
-        return hasAge && numericAge >= 26 && numericAge <= 30;
-      }
-      if (filterKey === "age31Plus") {
-        return hasAge && numericAge >= 31;
-      }
-      if (filterKey === "nearby") {
-        const distanceMatch = String(distance).match(/\d+/);
-        const km = distanceMatch ? Number(distanceMatch[0]) : Number.NaN;
-        return Number.isFinite(km) && km <= 10;
-      }
-
-      return true;
+    setDraftFilters((current) => {
+      const currentInterests = Array.isArray(current.interests) ? current.interests : [];
+      const hasInterest = currentInterests.includes(nextInterest);
+      return {
+        ...current,
+        interests: hasInterest
+          ? currentInterests.filter((interest) => interest !== nextInterest)
+          : [...currentInterests, nextInterest]
+      };
     });
-  }, [people, query, filterKey]);
+  }
+
+  function applyPreset(filters) {
+    setDraftFilters(normalizeDiscoverFilters(filters));
+  }
+
+  function applyFilters() {
+    setAppliedFilters(normalizeDiscoverFilters(draftFilters));
+    setIsFilterOpen(false);
+  }
+
+  function resetFilters() {
+    setDraftFilters(defaultDiscoverFilters);
+    setAppliedFilters(defaultDiscoverFilters);
+    setIsFilterOpen(false);
+  }
 
   return (
     <section className="discover-section people-section">
@@ -418,46 +532,148 @@ function People() {
             <button
               type="button"
               onClick={() => setIsFilterOpen((current) => !current)}
-              aria-haspopup="menu"
+              aria-haspopup="dialog"
               aria-expanded={isFilterOpen}
+              className={activeFilterCount > 0 ? "active" : ""}
             >
               <Filter size={18} />
               {activeFilterLabel}
             </button>
 
             {isFilterOpen ? (
-              <div className="people-filter-menu" role="menu" aria-label={t("filters")}>
-                {filterOptions.map((option) => (
-                  <button
-                    type="button"
-                    key={option.key}
-                    role="menuitemradio"
-                    aria-checked={filterKey === option.key}
-                    className={filterKey === option.key ? "active" : ""}
-                    onClick={() => {
-                      setFilterKey(option.key);
-                      setIsFilterOpen(false);
-                    }}
-                  >
-                    <span>{option.label}</span>
-                    {filterKey === option.key ? <Check size={16} /> : null}
+              <div className="people-filter-menu people-filter-panel" role="dialog" aria-label={t("filters")}>
+                <header className="people-filter-panel-header">
+                  <div>
+                    <strong>{t("advancedFilters.title")}</strong>
+                    <span>{t("advancedFilters.subtitle")}</span>
+                  </div>
+                  <button type="button" className="people-filter-close" onClick={() => setIsFilterOpen(false)}>
+                    <X size={16} />
                   </button>
-                ))}
+                </header>
+
+                <div className="people-filter-presets">
+                  {filterPresets.map((option) => (
+                    <button type="button" key={option.key} onClick={() => applyPreset(option.filters)}>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                <label className="people-filter-search">
+                  <Search size={16} />
+                  <input
+                    type="search"
+                    value={draftFilters.q}
+                    onChange={(event) => updateDraftFilter("q", event.target.value)}
+                    placeholder={t("searchPlaceholder")}
+                    autoComplete="off"
+                  />
+                </label>
+
+                <div className="people-filter-group">
+                  <span>{t("advancedFilters.gender")}</span>
+                  <div className="people-filter-segments">
+                    {["", "female", "male"].map((gender) => (
+                      <button
+                        type="button"
+                        key={gender || "any"}
+                        className={draftFilters.gender === gender ? "active" : ""}
+                        onClick={() => updateDraftFilter("gender", gender)}
+                      >
+                        {t(`advancedFilters.genders.${gender || "any"}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="people-filter-group">
+                  <span>{t("advancedFilters.country")}</span>
+                  <select
+                    value={draftFilters.country_id}
+                    onChange={(event) => updateDraftFilter("country_id", event.target.value)}
+                  >
+                    <option value="">{t("advancedFilters.anyCountry")}</option>
+                    {countries.map((country, index) => (
+                      <option key={`${country.id ?? country.value ?? index}`} value={country.id ?? ""}>
+                        {country.name ?? country.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="people-filter-group">
+                  <span>{t("advancedFilters.ageRange", { min: draftMinAge, max: draftMaxAge })}</span>
+                  <div className="people-filter-sliders">
+                    <input
+                      type="range"
+                      min={ageRangeLimits.min}
+                      max={ageRangeLimits.max}
+                      value={draftMinAge}
+                      onChange={(event) => {
+                        const nextMin = Math.min(Number(event.target.value), draftMaxAge);
+                        updateDraftFilter("min_age", String(nextMin));
+                      }}
+                    />
+                    <input
+                      type="range"
+                      min={ageRangeLimits.min}
+                      max={ageRangeLimits.max}
+                      value={draftMaxAge}
+                      onChange={(event) => {
+                        const nextMax = Math.max(Number(event.target.value), draftMinAge);
+                        updateDraftFilter("max_age", String(nextMax));
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {visibleInterests.length > 0 ? (
+                  <div className="people-filter-group">
+                    <span>{t("advancedFilters.interests")}</span>
+                    <div className="people-interest-chips">
+                      {visibleInterests.map((interest) => {
+                        const interestId = String(interest.id);
+                        const isActive = draftFilters.interests.includes(interestId);
+                        return (
+                          <button
+                            type="button"
+                            key={interestId}
+                            className={isActive ? "active" : ""}
+                            onClick={() => toggleDraftInterest(interestId)}
+                          >
+                            {isActive ? <Check size={13} /> : null}
+                            {interest.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
+                <footer className="people-filter-actions">
+                  <button type="button" onClick={resetFilters}>
+                    {t("advancedFilters.reset")}
+                  </button>
+                  <button type="button" onClick={applyFilters}>
+                    {t("advancedFilters.apply")}
+                  </button>
+                </footer>
               </div>
             ) : null}
           </div>
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoadingAllPeople || isLoading || (isFetching && people.length === 0) ? (
         <PeopleGridSkeleton />
-      ) : isError ? (
+      ) : isAllPeopleError || isError ? (
         <p className="people-status">{t("peopleError")}</p>
-      ) : filteredPeople.length === 0 ? (
+      ) : people.length === 0 ? (
         <p className="people-status">{t("peopleEmpty")}</p>
       ) : (
         <div className="people-grid">
-          {filteredPeople.map((person) => (
+          {people.map((person) => (
             <ProfileCard person={person} key={person.id} />
           ))}
         </div>

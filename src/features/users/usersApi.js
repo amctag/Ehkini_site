@@ -76,6 +76,63 @@ function mapUsersList(response) {
   );
 }
 
+function pickSearchCursor(response) {
+  return (
+    response?.next_cursor ??
+    response?.nextCursor ??
+    response?.cursor ??
+    response?.data?.next_cursor ??
+    response?.data?.nextCursor ??
+    response?.data?.cursor ??
+    response?.meta?.next_cursor ??
+    response?.meta?.nextCursor ??
+    response?.data?.meta?.next_cursor ??
+    response?.data?.meta?.nextCursor ??
+    null
+  );
+}
+
+function normalizeSearchArgs(input) {
+  if (typeof input === "string") {
+    return { q: input };
+  }
+
+  if (!input || typeof input !== "object") {
+    return {};
+  }
+
+  return input;
+}
+
+function buildSearchUsersUrl(input) {
+  const args = normalizeSearchArgs(input);
+  const params = new URLSearchParams();
+
+  const scalarKeys = ["q", "gender", "country_id", "min_age", "max_age", "cursor"];
+  scalarKeys.forEach((key) => {
+    const value = args[key];
+    if (value === null || value === undefined || String(value).trim() === "") return;
+    params.append(key, String(value).trim());
+  });
+
+  const interests = Array.isArray(args.interests) ? args.interests : [];
+  interests.forEach((interest) => {
+    if (interest === null || interest === undefined || String(interest).trim() === "") return;
+    params.append("interests[]", String(interest).trim());
+  });
+
+  const queryString = params.toString();
+  return queryString ? `users/search?${queryString}` : "users/search";
+}
+
+function mapUsersSearchResponse(response) {
+  return {
+    users: mapUsersList(response),
+    cursor: pickSearchCursor(response),
+    nextCursor: pickSearchCursor(response)
+  };
+}
+
 function buildSearchClickPayload(user) {
   const rawUserId =
     (typeof user === "object" &&
@@ -129,15 +186,8 @@ export const usersApi = api.injectEndpoints({
       providesTags: ["User"]
     }),
     searchUsers: builder.query({
-      query: (name) => ({
-        url: "users/search",
-        params: {
-          name,
-          search_name: name,
-          q: name
-        }
-      }),
-      transformResponse: mapUsersList,
+      query: buildSearchUsersUrl,
+      transformResponse: mapUsersSearchResponse,
       providesTags: ["User"]
     }),
     getLastSearchedUsers: builder.query({

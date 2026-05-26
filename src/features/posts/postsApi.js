@@ -63,16 +63,28 @@ export const postsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUserPosts: builder.query({
       query: (userId) => `users/${String(userId ?? "").trim()}/posts`,
-      transformResponse: (response) => rowsFromPostsResponse(response).map(mapPostResponseRow)
+      transformResponse: (response) => rowsFromPostsResponse(response).map(mapPostResponseRow),
+      providesTags: (result, _error, userId) => [
+        { type: "Posts", id: `USER-${String(userId ?? "").trim()}` },
+        ...(result ?? []).map((post) => ({ type: "Posts", id: post.id }))
+      ]
     }),
     createPost: builder.mutation({
       query: (payload) => ({
         url: "posts",
         method: "POST",
         body: buildCreatePostBody(payload)
-      })
+      }),
+      invalidatesTags: ["Posts"]
+    }),
+    deletePost: builder.mutation({
+      query: (postId) => ({
+        url: `posts/${String(postId ?? "").trim()}`,
+        method: "DELETE"
+      }),
+      invalidatesTags: (_result, _error, postId) => [{ type: "Posts", id: String(postId ?? "").trim() }]
     })
   })
 });
 
-export const { useCreatePostMutation, useGetUserPostsQuery } = postsApi;
+export const { useCreatePostMutation, useDeletePostMutation, useGetUserPostsQuery } = postsApi;

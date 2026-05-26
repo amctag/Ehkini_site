@@ -1,11 +1,12 @@
 "use client";
 
-import { Camera, Edit, Gift, Images, MapPin, X } from "lucide-react";
+import { Camera, Edit, Gift, Images, MapPin, PenSquare, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useGetCountriesQuery, useGetInterestsQuery } from "@/src/features/auth/authApi";
 import { selectCurrentUser } from "@/src/features/auth/authSlice";
+import { useGetUserPostsQuery } from "@/src/features/posts/postsApi";
 import { useUpdateProfileMutation } from "@/src/features/profiles/profilesApi";
 import { useGetWalletGiftTransactionsQuery } from "@/src/features/wallet/walletApi";
 import { useAppSelector } from "@/src/hooks/reduxHooks";
@@ -88,6 +89,12 @@ function toInteger(value) {
   return Math.trunc(numberValue);
 }
 
+function resolveUserId(value) {
+  const id = value?.id ?? value?.user_id ?? value?.userId ?? value?.profile_id ?? value?.profileId;
+  const text = String(id ?? "").trim();
+  return text || null;
+}
+
 const giftIconByKeyword = [
   { pattern: /(heart|love|romance)/, icon: "\u2764\uFE0F" },
   { pattern: /(rose|flower|bouquet)/, icon: "\uD83C\uDF39" },
@@ -158,6 +165,17 @@ function mapGiftItem(gift) {
 }
 
 function formatGiftTransactionDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function formatPostDate(value) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
@@ -518,7 +536,15 @@ export default function ProfilePage() {
   const t = useTranslations("profile");
   const currentUser = useAppSelector(selectCurrentUser);
   const currentUserData = unwrapCurrentUser(currentUser);
+  const profileUserId = resolveUserId(currentUserData);
   const profile = buildProfile(currentUser, t);
+  const {
+    data: userPosts = [],
+    isFetching: isUserPostsLoading,
+    isError: isUserPostsError
+  } = useGetUserPostsQuery(profileUserId, {
+    skip: !profileUserId
+  });
   const {
     data: walletGiftTransactions = [],
     isFetching: isGiftTransactionsLoading,
@@ -598,6 +624,49 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
+        </article>
+
+        <article className={`profile-posts-panel ${userPosts.length === 0 ? "compact-empty" : ""}`}>
+          <h2>
+            <PenSquare size={20} />
+            {t("postsHeading")}
+          </h2>
+          {isUserPostsLoading && userPosts.length === 0 ? (
+            <p className="profile-section-empty">{t("postsLoading")}</p>
+          ) : null}
+          {isUserPostsError && userPosts.length === 0 ? (
+            <p className="profile-section-empty">{t("postsLoadError")}</p>
+          ) : null}
+          {userPosts.length > 0 ? (
+            <div className="profile-posts-list">
+              {userPosts.map((post, index) => {
+                const imageUrl = validImageUrl(post.image);
+                const hasImage = Boolean(imageUrl);
+
+                return (
+                  <article className={`profile-post-card ${hasImage ? "" : "no-image"}`} key={post.id || `profile-post-${index}`}>
+                    {hasImage ? (
+                      <div className="profile-post-media">
+                        <Image
+                          src={imageUrl}
+                          alt={t("postImageAlt", { index: index + 1 })}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 620px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="profile-post-body">
+                      {post.caption ? <p className="profile-post-caption">{post.caption}</p> : null}
+                      {post.createdAt ? <small className="profile-post-date">{formatPostDate(post.createdAt)}</small> : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            !isUserPostsLoading && !isUserPostsError ? <p className="profile-section-empty">{t("emptyPosts")}</p> : null
+          )}
         </article>
 
         <article className={`profile-photos-panel ${photos.length === 0 ? "compact-empty" : ""}`}>

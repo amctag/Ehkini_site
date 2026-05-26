@@ -861,7 +861,12 @@
       }
     ],
     "photosHeading": "Photos",
+    "postsHeading": "Posts",
+    "postsLoading": "Loading posts...",
+    "postsLoadError": "Could not load posts. Please try again.",
+    "emptyPosts": "No posts yet.",
     "emptyPhotos": "No photos yet.",
+    "postImageAlt": "Post image {index}",
     "photoAlt": "Profile photo {index}",
     "photos": [
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",

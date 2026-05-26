@@ -20,8 +20,51 @@ function buildCreatePostBody(input) {
   return formData;
 }
 
+function rowsFromPostsResponse(response) {
+  if (!response) return [];
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.data?.data)) return response.data.data;
+  if (Array.isArray(response?.posts)) return response.posts;
+  if (Array.isArray(response?.result)) return response.result;
+  return [];
+}
+
+function mapPostResponseRow(row, index) {
+  const imageField = row?.image ?? row?.media ?? row?.photo ?? row?.attachment ?? null;
+  const image =
+    (typeof imageField === "string" && imageField.trim()) ||
+    (typeof imageField?.url === "string" && imageField.url.trim()) ||
+    (typeof imageField?.path === "string" && imageField.path.trim()) ||
+    (typeof row?.image_url === "string" && row.image_url.trim()) ||
+    (typeof row?.post_image === "string" && row.post_image.trim()) ||
+    (typeof row?.post_image_url === "string" && row.post_image_url.trim()) ||
+    (typeof row?.media_url === "string" && row.media_url.trim()) ||
+    (typeof row?.photo_url === "string" && row.photo_url.trim()) ||
+    "";
+
+  const caption =
+    (typeof row?.caption === "string" && row.caption.trim()) ||
+    (typeof row?.content === "string" && row.content.trim()) ||
+    (typeof row?.description === "string" && row.description.trim()) ||
+    (typeof row?.body === "string" && row.body.trim()) ||
+    (typeof row?.text === "string" && row.text.trim()) ||
+    "";
+
+  return {
+    id: String(row?.id ?? row?.post_id ?? row?.postId ?? `post-${index + 1}`),
+    caption,
+    image,
+    createdAt: row?.created_at ?? row?.createdAt ?? row?.date ?? row?.time ?? ""
+  };
+}
+
 export const postsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getUserPosts: builder.query({
+      query: (userId) => `users/${String(userId ?? "").trim()}/posts`,
+      transformResponse: (response) => rowsFromPostsResponse(response).map(mapPostResponseRow)
+    }),
     createPost: builder.mutation({
       query: (payload) => ({
         url: "posts",
@@ -32,4 +75,4 @@ export const postsApi = api.injectEndpoints({
   })
 });
 
-export const { useCreatePostMutation } = postsApi;
+export const { useCreatePostMutation, useGetUserPostsQuery } = postsApi;
